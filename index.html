@@ -39,6 +39,18 @@
       line-height: 1.7;
       min-height: 100vh;
       scroll-behavior: smooth;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=60");
+      opacity: 0.08;
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: -1;
     }
 
     a {
@@ -72,6 +84,12 @@
       justify-content: space-between;
       z-index: 20;
       box-shadow: var(--shadow);
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    header.hidden {
+      transform: translate(-50%, -120%);
+      opacity: 0;
     }
 
     .brand {
@@ -672,7 +690,7 @@
             <li><span>✧</span> 定制进度实时追踪与质检报告</li>
           </ul>
         </div>
-        <div class="member-card">
+        <div class="member-card hidden" id="memberCard">
           <div class="member-chip">
             <span>YUN WAN QIAN</span>
             <span>ELITE MEMBER</span>
@@ -690,17 +708,22 @@
             </div>
           </div>
         </div>
-        <div class="login-panel">
+        <div class="login-panel" id="loginPanel">
           <h3>会员登陆 / 注册</h3>
           <div class="field">
-            <label>手机号</label>
-            <input type="tel" id="loginPhone" placeholder="请输入手机号" />
+            <label>账号</label>
+            <input type="text" id="loginAccount" placeholder="请输入账号" />
           </div>
           <div class="field">
-            <label>会员昵称</label>
+            <label>密码</label>
+            <input type="password" id="loginPassword" placeholder="请输入密码" />
+          </div>
+          <div class="field">
+            <label>会员昵称（注册时填写）</label>
             <input type="text" id="loginName" placeholder="例如：悦雅" />
           </div>
-          <button class="btn" id="inlineLogin">立即登录</button>
+          <button class="btn" id="inlineLogin">账号登录</button>
+          <button class="btn secondary" id="inlineRegister">立即注册</button>
           <small style="color: var(--muted);">
             登录后解锁电子会员卡、AI 造型方案与专属优惠。
           </small>
@@ -725,17 +748,9 @@
             <button class="btn" id="sendBtn">发送给 AI</button>
           </div>
           <div class="glass-card">
-            <h3>RAG 配置预览</h3>
-            <div class="rag-meta" id="ragMeta"></div>
-            <div style="margin-top: 18px;" class="field">
-              <label>Seed API Key (可选)</label>
-              <input type="password" id="seedKey" placeholder="输入后可调用实时模型" />
-            </div>
-            <div class="field">
-              <label>知识库片段</label>
-              <textarea id="kbInput" rows="8"></textarea>
-            </div>
-            <button class="btn secondary" id="updateKb">更新知识库</button>
+            <h3>品牌工坊影像</h3>
+            <p style="color: var(--muted); margin-bottom: 16px;">AI 客服已接入私有知识库，内部配置不对外展示。</p>
+            <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80" alt="湘绣工坊" style="border-radius: 16px; height: 360px; object-fit: cover;" />
           </div>
         </div>
       </div>
@@ -820,11 +835,15 @@
     <div class="modal-content">
       <h3 id="modalTitle">会员登录</h3>
       <div class="field">
-        <label>手机号</label>
-        <input type="tel" id="modalPhone" placeholder="请输入手机号" />
+        <label>账号</label>
+        <input type="text" id="modalAccount" placeholder="请输入账号" />
       </div>
       <div class="field">
-        <label>会员昵称</label>
+        <label>密码</label>
+        <input type="password" id="modalPassword" placeholder="请输入密码" />
+      </div>
+      <div class="field">
+        <label>会员昵称（注册时填写）</label>
         <input type="text" id="modalName" placeholder="例如：韵雅" />
       </div>
       <button class="btn" id="modalSubmit">确认</button>
@@ -858,26 +877,7 @@
 
     const chatMessages = document.getElementById("chatMessages");
     const chatInput = document.getElementById("chatInput");
-    const ragMeta = document.getElementById("ragMeta");
-    const kbInput = document.getElementById("kbInput");
-    const seedKey = document.getElementById("seedKey");
-
-    const renderRagMeta = (context) => {
-      ragMeta.textContent = JSON.stringify(
-        {
-          model: "seed-1-6-flash",
-          prompt: fixedPrompt,
-          context,
-          response_format: "JSON",
-        },
-        null,
-        2
-      );
-    };
-
-    const refreshKb = () => {
-      kbInput.value = knowledgeBase.map((item) => `${item.title}: ${item.content}`).join("\n");
-    };
+    const seedApiKey = "";
 
     const findContext = (question) => {
       const keywords = question.split(/\s+/).filter(Boolean);
@@ -906,7 +906,7 @@
     };
 
     const callSeedModel = async (question, context) => {
-      const apiKey = seedKey.value.trim();
+      const apiKey = seedApiKey.trim();
       if (!apiKey) {
         return simulateSeedResponse(question, context);
       }
@@ -953,7 +953,6 @@
       chatInput.value = "";
 
       const context = findContext(question);
-      renderRagMeta(context);
       appendMessage("assistant", "正在检索知识库并生成回答...", "AI");
       const response = await callSeedModel(question, context);
       chatMessages.lastChild.remove();
@@ -964,39 +963,23 @@
       );
     });
 
-    document.getElementById("updateKb").addEventListener("click", () => {
-      const lines = kbInput.value.split("\n").filter(Boolean);
-      knowledgeBase.length = 0;
-      lines.forEach((line, index) => {
-        const [title, ...rest] = line.split(":");
-        knowledgeBase.push({
-          title: title?.trim() || `知识-${index + 1}`,
-          content: rest.join(":").trim() || "待补充",
-        });
-      });
-      renderRagMeta(knowledgeBase.slice(0, 2));
-    });
-
-    const updateMemberCard = (name, phone) => {
-      document.getElementById("memberName").textContent = `会员：${name}`;
-      document.getElementById("memberTier").textContent = "等级：星耀 · 尊享";
-      document.getElementById("memberId").textContent = `YWQ-${phone.slice(-4)}-${Math.floor(
-        1000 + Math.random() * 9000
-      )}`;
-      document.getElementById("memberPoints").textContent = Math.floor(1200 + Math.random() * 800);
+    const updateMemberCard = (user) => {
+      document.getElementById("memberName").textContent = `会员：${user.name}`;
+      document.getElementById("memberTier").textContent = `等级：${user.level}`;
+      document.getElementById("memberId").textContent = user.id;
+      document.getElementById("memberPoints").textContent = user.points;
     };
 
-    const saveMember = (name, phone) => {
-      localStorage.setItem("yunwanqian_member", JSON.stringify({ name, phone }));
-      updateMemberCard(name, phone);
+    const setMemberView = (user) => {
+      updateMemberCard(user);
+      document.getElementById("memberCard").classList.remove("hidden");
+      document.getElementById("loginPanel").classList.add("hidden");
     };
 
-    document.getElementById("inlineLogin").addEventListener("click", () => {
-      const name = document.getElementById("loginName").value.trim();
-      const phone = document.getElementById("loginPhone").value.trim();
-      if (!name || !phone) return;
-      saveMember(name, phone);
-    });
+    const persistMember = (user) => {
+      localStorage.setItem("yunwanqian_member", JSON.stringify(user));
+      setMemberView(user);
+    };
 
     const authModal = document.getElementById("authModal");
     const modalTitle = document.getElementById("modalTitle");
@@ -1010,12 +993,80 @@
     document.getElementById("registerBtn").addEventListener("click", () => openModal("register"));
     document.getElementById("modalClose").addEventListener("click", () => authModal.classList.remove("active"));
 
-    document.getElementById("modalSubmit").addEventListener("click", () => {
+    const registerAccount = async (account, password, name) => {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account, password, name }),
+      });
+      return response.json();
+    };
+
+    const loginAccount = async (account, password) => {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account, password }),
+      });
+      return response.json();
+    };
+
+    const showAuthMessage = (message) => {
+      appendMessage("assistant", message, "系统");
+    };
+
+    document.getElementById("inlineLogin").addEventListener("click", async () => {
+      const account = document.getElementById("loginAccount").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      if (!account || !password) return;
+      const result = await loginAccount(account, password);
+      if (!result.ok) {
+        showAuthMessage(result.message);
+        return;
+      }
+      persistMember(result.user);
+    });
+
+    document.getElementById("inlineRegister").addEventListener("click", async () => {
+      const account = document.getElementById("loginAccount").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const name = document.getElementById("loginName").value.trim();
+      if (!account || !password || !name) return;
+      const result = await registerAccount(account, password, name);
+      if (!result.ok) {
+        showAuthMessage(result.message);
+        return;
+      }
+      persistMember(result.user);
+    });
+
+    document.getElementById("modalSubmit").addEventListener("click", async () => {
       const name = document.getElementById("modalName").value.trim();
-      const phone = document.getElementById("modalPhone").value.trim();
-      if (!name || !phone) return;
-      saveMember(name, phone);
+      const account = document.getElementById("modalAccount").value.trim();
+      const password = document.getElementById("modalPassword").value.trim();
+      if (!account || !password) return;
+      const result =
+        modalTitle.textContent === "会员注册"
+          ? await registerAccount(account, password, name || "贵宾")
+          : await loginAccount(account, password);
+      if (!result.ok) {
+        showAuthMessage(result.message);
+        return;
+      }
+      persistMember(result.user);
       authModal.classList.remove("active");
+    });
+
+    let lastScrollY = window.scrollY;
+    window.addEventListener("scroll", () => {
+      const currentScroll = window.scrollY;
+      const header = document.querySelector("header");
+      if (currentScroll > lastScrollY && currentScroll > 120) {
+        header.classList.add("hidden");
+      } else {
+        header.classList.remove("hidden");
+      }
+      lastScrollY = currentScroll;
     });
 
     const tryonUpload = document.getElementById("tryonUpload");
@@ -1061,14 +1112,11 @@
 
     const stored = localStorage.getItem("yunwanqian_member");
     if (stored) {
-      const { name, phone } = JSON.parse(stored);
-      updateMemberCard(name, phone);
-      document.getElementById("loginName").value = name;
-      document.getElementById("loginPhone").value = phone;
+      const user = JSON.parse(stored);
+      setMemberView(user);
+      document.getElementById("loginName").value = user.name || "";
+      document.getElementById("loginAccount").value = user.account || "";
     }
-
-    refreshKb();
-    renderRagMeta(knowledgeBase.slice(0, 2));
     appendMessage("assistant", "您好，我是韵万千 AI 客服，请问今天想了解哪类旗袍定制服务？", "AI");
     drawTryon(tryonImage.src, tryonStyle.value);
   </script>
