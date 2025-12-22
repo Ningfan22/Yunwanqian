@@ -114,23 +114,21 @@ const persistMember = (user) => {
   setMemberView(user);
 };
 
-const registerAccount = async (account, password, name) => {
-  const response = await fetch("/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ account, password, name }),
-  });
-  return response.json();
+const postJson = async (url, payload) => {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return await response.json();
+  } catch (error) {
+    return { ok: false, message: "无法连接服务器，请确认已启动服务。" };
+  }
 };
 
-const loginAccount = async (account, password) => {
-  const response = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ account, password }),
-  });
-  return response.json();
-};
+const registerAccount = (account, password, name) => postJson("/api/register", { account, password, name });
+const loginAccount = (account, password) => postJson("/api/login", { account, password });
 
 const initAuth = () => {
   const authModal = document.getElementById("authModal");
@@ -308,20 +306,6 @@ const initMemberSparkle = () => {
   });
 };
 
-const initBackgroundParallax = () => {
-  const update = () => {
-    const offset = Math.min(window.scrollY * 0.08, 80);
-    document.body.style.setProperty("--bg-y", `${-offset}px`);
-    document.body.style.setProperty("--bg-x", `${offset / 2}px`);
-    document.body.style.setProperty("--bg-scale", `${1 + offset / 900}`);
-    document.body.style.setProperty("--bg-opacity", `${0.18 + offset / 600}`);
-    document.body.style.setProperty("--bg-blur", `${Math.min(offset / 30, 4)}px`);
-    document.body.style.setProperty("--bg-rotate", `${offset / 16}deg`);
-  };
-
-  window.addEventListener("scroll", update);
-  update();
-};
 
 const initToast = () => {
   document.getElementById("toastClose").addEventListener("click", closeToast);
@@ -340,7 +324,6 @@ const initMemberState = () => {
 };
 
 initHeaderScroll();
-initBackgroundParallax();
 initScrollButtons();
 initAuth();
 initToast();
