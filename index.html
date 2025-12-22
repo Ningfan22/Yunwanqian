@@ -7,568 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      color-scheme: light;
-      --bg: #0b0b0d;
-      --bg-soft: #121216;
-      --card: #1d1c22;
-      --gold: #c8a76b;
-      --gold-soft: rgba(200, 167, 107, 0.2);
-      --text: #f5f2ec;
-      --muted: rgba(245, 242, 236, 0.7);
-      --accent: #b51d33;
-      --accent-soft: rgba(181, 29, 51, 0.25);
-      --glass: rgba(255, 255, 255, 0.08);
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-      --radius-lg: 28px;
-      --radius-md: 18px;
-      --radius-sm: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: "Montserrat", "Noto Serif SC", serif;
-      background: radial-gradient(circle at top, #1b1a20 0%, #0b0b0d 45%, #050506 100%);
-      color: var(--text);
-      line-height: 1.7;
-      min-height: 100vh;
-      scroll-behavior: smooth;
-      position: relative;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=60");
-      opacity: 0.08;
-      mix-blend-mode: screen;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img {
-      max-width: 100%;
-      display: block;
-    }
-
-    .container {
-      width: min(1180px, 90vw);
-      margin: 0 auto;
-    }
-
-    header {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(1200px, 92vw);
-      backdrop-filter: blur(20px);
-      background: rgba(10, 10, 13, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 20;
-      box-shadow: var(--shadow);
-      transition: transform 0.4s ease, opacity 0.4s ease;
-    }
-
-    header.hidden {
-      transform: translate(-50%, -120%);
-      opacity: 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: "Noto Serif SC", serif;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .brand-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: conic-gradient(from 180deg, #c8a76b, #f3ddae, #b6813c, #c8a76b);
-      display: grid;
-      place-items: center;
-      color: #111;
-      font-weight: 700;
-    }
-
-    nav {
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      font-size: 14px;
-    }
-
-    nav a {
-      color: var(--muted);
-      transition: color 0.3s ease;
-    }
-
-    nav a:hover {
-      color: var(--text);
-    }
-
-    .cta-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn {
-      border: 1px solid transparent;
-      border-radius: 999px;
-      padding: 10px 22px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s ease;
-      color: var(--text);
-      background: var(--accent);
-      box-shadow: 0 10px 30px rgba(181, 29, 51, 0.4);
-    }
-
-    .btn.secondary {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: none;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 35px rgba(181, 29, 51, 0.45);
-    }
-
-    main {
-      padding-top: 120px;
-    }
-
-    section {
-      padding: 90px 0;
-    }
-
-    .hero {
-      display: grid;
-      gap: 40px;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      align-items: center;
-    }
-
-    .hero h1 {
-      font-family: "Noto Serif SC", serif;
-      font-size: clamp(2.5rem, 4vw, 4.6rem);
-      line-height: 1.1;
-      margin-bottom: 24px;
-    }
-
-    .hero p {
-      color: var(--muted);
-      margin-bottom: 28px;
-      font-size: 1rem;
-    }
-
-    .hero-badges {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 36px;
-    }
-
-    .badge {
-      padding: 8px 16px;
-      border-radius: 999px;
-      background: var(--glass);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .hero-card {
-      position: relative;
-      padding: 26px;
-      border-radius: var(--radius-lg);
-      background: linear-gradient(140deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .hero-card img {
-      width: 100%;
-      height: 420px;
-      object-fit: cover;
-      border-radius: var(--radius-md);
-      filter: saturate(1.1);
-    }
-
-    .hero-card .overlay {
-      position: absolute;
-      bottom: 30px;
-      left: 30px;
-      right: 30px;
-      padding: 20px;
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(10px);
-    }
-
-    .section-title {
-      font-family: "Noto Serif SC", serif;
-      font-size: clamp(1.8rem, 3vw, 2.8rem);
-      margin-bottom: 18px;
-    }
-
-    .section-subtitle {
-      color: var(--muted);
-      max-width: 680px;
-      margin-bottom: 40px;
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 24px;
-    }
-
-    .glass-card {
-      padding: 24px;
-      border-radius: var(--radius-md);
-      background: var(--glass);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: var(--shadow);
-    }
-
-    .feature-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      background: var(--accent-soft);
-      display: grid;
-      place-items: center;
-      font-size: 20px;
-      margin-bottom: 18px;
-    }
-
-    .process {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-    }
-
-    .process-step {
-      padding: 22px;
-      border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .process-step span {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-size: 12px;
-      margin-bottom: 14px;
-    }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 18px;
-    }
-
-    .gallery img {
-      border-radius: var(--radius-md);
-      height: 240px;
-      object-fit: cover;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .membership {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-      align-items: center;
-    }
-
-    .member-card {
-      padding: 24px;
-      border-radius: 26px;
-      background: linear-gradient(135deg, rgba(200, 167, 107, 0.2), rgba(181, 29, 51, 0.25));
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .member-card::after {
-      content: "";
-      position: absolute;
-      top: -80px;
-      right: -80px;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-      filter: blur(0px);
-    }
-
-    .member-card h3 {
-      font-family: "Noto Serif SC", serif;
-      margin-bottom: 8px;
-    }
-
-    .member-card p {
-      color: var(--muted);
-      margin-bottom: 24px;
-    }
-
-    .member-chip {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      letter-spacing: 0.6px;
-      margin-bottom: 32px;
-    }
-
-    .member-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      font-size: 14px;
-    }
-
-    .member-info strong {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .member-benefits {
-      display: grid;
-      gap: 16px;
-    }
-
-    .member-benefits li {
-      list-style: none;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      color: var(--muted);
-    }
-
-    .member-benefits span {
-      color: var(--gold);
-      font-size: 18px;
-    }
-
-    .login-panel {
-      display: grid;
-      gap: 18px;
-      padding: 24px;
-      background: rgba(10, 10, 15, 0.6);
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .field {
-      display: grid;
-      gap: 8px;
-    }
-
-    .field label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 12px 14px;
-      color: var(--text);
-      font-family: inherit;
-    }
-
-    .ai-layout {
-      display: grid;
-      gap: 24px;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-
-    .chat-box {
-      background: rgba(8, 8, 12, 0.7);
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 18px;
-      display: grid;
-      gap: 16px;
-      min-height: 420px;
-    }
-
-    .chat-messages {
-      display: grid;
-      gap: 12px;
-      max-height: 320px;
-      overflow-y: auto;
-      padding-right: 6px;
-    }
-
-    .message {
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      font-size: 14px;
-    }
-
-    .message.user {
-      background: rgba(181, 29, 51, 0.3);
-      justify-self: end;
-    }
-
-    .message .meta {
-      display: block;
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .rag-meta {
-      font-size: 12px;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.05);
-      padding: 10px 12px;
-      border-radius: 12px;
-    }
-
-    .tryon {
-      display: grid;
-      gap: 18px;
-    }
-
-    .tryon-preview {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .tryon-preview img {
-      border-radius: var(--radius-md);
-      height: 320px;
-      object-fit: cover;
-    }
-
-    .tryon-output {
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.45);
-      padding: 10px;
-    }
-
-    .tryon-output canvas {
-      width: 100%;
-      border-radius: var(--radius-md);
-      display: block;
-    }
-
-    footer {
-      padding: 60px 0 80px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      place-items: center;
-      z-index: 30;
-      padding: 20px;
-    }
-
-    .modal.active {
-      display: grid;
-    }
-
-    .modal-content {
-      background: #111116;
-      padding: 28px;
-      border-radius: var(--radius-md);
-      width: min(420px, 90vw);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: var(--shadow);
-      display: grid;
-      gap: 16px;
-    }
-
-    .modal-content h3 {
-      font-family: "Noto Serif SC", serif;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    @media (max-width: 900px) {
-      header {
-        flex-direction: column;
-        gap: 12px;
-        border-radius: 24px;
-        padding: 16px;
-      }
-
-      nav {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .hero-card img {
-        height: 320px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      section {
-        padding: 70px 0;
-      }
-
-      .hero h1 {
-        font-size: 2.4rem;
-      }
-
-      .chat-box {
-        min-height: 360px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header>
@@ -576,7 +15,7 @@
       <div class="brand-mark">韵</div>
       <div>
         <div>长沙韵万千</div>
-        <small style="color: var(--muted);">高端定制湘派刺绣旗袍</small>
+        <small>高端定制湘派刺绣旗袍</small>
       </div>
     </div>
     <nav>
@@ -608,15 +47,15 @@
             让传统工艺与现代科技协同共鸣。
           </p>
           <div class="cta-group">
-            <button class="btn" onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})">预约专属顾问</button>
-            <button class="btn secondary" onclick="document.querySelector('#ai').scrollIntoView({behavior: 'smooth'})">体验 AI 客服</button>
+            <button class="btn" data-scroll="#contact">预约专属顾问</button>
+            <button class="btn secondary" data-scroll="#ai">体验 AI 客服</button>
           </div>
         </div>
         <div class="hero-card">
           <img src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80" alt="高端旗袍展示" />
           <div class="overlay">
             <strong>2024 春季·云纹织影</strong>
-            <p style="color: var(--muted); margin-top: 6px;">
+            <p>
               72 小时灵感采集 | 5 次手工精修 | 1 对 1 形象搭配
             </p>
           </div>
@@ -649,7 +88,7 @@
           </div>
         </div>
 
-        <div style="margin-top: 48px;" class="process">
+        <div class="process">
           <div class="process-step">
             <span>STEP 01</span>
             <h4>灵感访谈</h4>
@@ -667,7 +106,7 @@
           </div>
         </div>
 
-        <div style="margin-top: 50px;" class="gallery">
+        <div class="gallery">
           <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80" alt="刺绣细节" />
           <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80" alt="旗袍面料" />
           <img src="https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=600&q=80" alt="穿搭展示" />
@@ -709,7 +148,7 @@
           </div>
         </div>
         <div class="login-panel" id="loginPanel">
-          <h3>会员登陆 / 注册</h3>
+          <h3>会员登录 / 注册</h3>
           <div class="field">
             <label>账号</label>
             <input type="text" id="loginAccount" placeholder="请输入账号" />
@@ -724,7 +163,7 @@
           </div>
           <button class="btn" id="inlineLogin">账号登录</button>
           <button class="btn secondary" id="inlineRegister">立即注册</button>
-          <small style="color: var(--muted);">
+          <small>
             登录后解锁电子会员卡、AI 造型方案与专属优惠。
           </small>
         </div>
@@ -749,8 +188,8 @@
           </div>
           <div class="glass-card">
             <h3>品牌工坊影像</h3>
-            <p style="color: var(--muted); margin-bottom: 16px;">AI 客服已接入私有知识库，内部配置不对外展示。</p>
-            <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80" alt="湘绣工坊" style="border-radius: 16px; height: 360px; object-fit: cover;" />
+            <p class="muted">AI 客服已接入私有知识库，内部配置不对外展示。</p>
+            <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80" alt="湘绣工坊" />
           </div>
         </div>
       </div>
@@ -786,7 +225,7 @@
           </div>
           <div class="glass-card">
             <h3>试穿说明</h3>
-            <p style="color: var(--muted); margin-bottom: 18px;">
+            <p class="muted">
               模拟系统会将刺绣纹样叠加于试穿图像，并生成高定风格的滤镜层。
               可以在接入 AI 试穿模型后，将该模块直接替换为真实推理结果。
             </p>
@@ -808,17 +247,17 @@
           <div class="glass-card">
             <h3>旗舰工坊</h3>
             <p>长沙·五一广场艺术街区 18 号</p>
-            <p style="color: var(--muted);">10:00 - 21:00</p>
+            <p class="muted">10:00 - 21:00</p>
           </div>
           <div class="glass-card">
             <h3>尊享热线</h3>
             <p>400-876-8899</p>
-            <p style="color: var(--muted);">专属顾问全天候在线</p>
+            <p class="muted">专属顾问全天候在线</p>
           </div>
           <div class="glass-card">
             <h3>数字体验</h3>
             <p>AI 客服 / AI 试穿 / 会员管理</p>
-            <p style="color: var(--muted);">7x24 全域服务</p>
+            <p class="muted">7x24 全域服务</p>
           </div>
         </div>
       </div>
@@ -851,274 +290,14 @@
     </div>
   </div>
 
-  <script>
-    const knowledgeBase = [
-      {
-        title: "定制周期",
-        content: "高端定制旗袍从量体到交付通常需要 15-25 天，包含 2-3 次试穿调整。",
-      },
-      {
-        title: "湘派刺绣特色",
-        content: "湘派刺绣以丝线光泽与立体针脚著称，擅长花鸟、祥云、水波纹样。",
-      },
-      {
-        title: "会员权益",
-        content: "会员可享受专属顾问、AI 形象搭配、生日礼盒及定制积分返还。",
-      },
-      {
-        title: "AI 试穿",
-        content: "AI 试穿可在 2 分钟内生成 3 套风格方案，支持横屏与竖屏输出。",
-      },
-    ];
+  <div class="toast" id="toast">
+    <div class="toast-card">
+      <strong id="toastTitle">提示</strong>
+      <p id="toastMessage"></p>
+      <button class="btn secondary" id="toastClose">知道了</button>
+    </div>
+  </div>
 
-    const fixedPrompt = `你是长沙韵万千的AI客服，回答应优雅、专业、精炼。
-必须输出 JSON 格式：{"answer":"...","confidence":0-1,"citations":["知识库标题"],"follow_up":"..."}
-回答需结合提供的知识库 context，不得编造。`;
-
-    const chatMessages = document.getElementById("chatMessages");
-    const chatInput = document.getElementById("chatInput");
-    const seedApiKey = "";
-
-    const findContext = (question) => {
-      const keywords = question.split(/\s+/).filter(Boolean);
-      const hits = knowledgeBase.filter((item) =>
-        keywords.some((word) => item.title.includes(word) || item.content.includes(word))
-      );
-      return hits.length ? hits : knowledgeBase.slice(0, 2);
-    };
-
-    const appendMessage = (role, text, meta = "") => {
-      const div = document.createElement("div");
-      div.className = `message ${role}`;
-      div.innerHTML = meta ? `<span class="meta">${meta}</span>${text}` : text;
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    };
-
-    const simulateSeedResponse = (question, context) => {
-      const summary = context.map((item) => item.content).join(" ");
-      return {
-        answer: `${summary} 如果需要更精准的建议，可告诉我您的场景与预算。`,
-        confidence: 0.78,
-        citations: context.map((item) => item.title),
-        follow_up: "是否需要为您安排线下量体或获取专属配色方案？",
-      };
-    };
-
-    const callSeedModel = async (question, context) => {
-      const apiKey = seedApiKey.trim();
-      if (!apiKey) {
-        return simulateSeedResponse(question, context);
-      }
-
-      const payload = {
-        model: "seed-1-6-flash",
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: fixedPrompt + `\n\ncontext:${JSON.stringify(context)}` },
-          { role: "user", content: question },
-        ],
-        temperature: 0.4,
-      };
-
-      try {
-        const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-          throw new Error("Seed API 请求失败");
-        }
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content;
-        return JSON.parse(content);
-      } catch (error) {
-        return {
-          answer: "当前 Seed API 暂不可用，已切换为本地知识库回复。",
-          confidence: 0.45,
-          citations: context.map((item) => item.title),
-          follow_up: "如需启用在线模型，请检查 API Key。",
-        };
-      }
-    };
-
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      const question = chatInput.value.trim();
-      if (!question) return;
-      appendMessage("user", question, "您");
-      chatInput.value = "";
-
-      const context = findContext(question);
-      appendMessage("assistant", "正在检索知识库并生成回答...", "AI");
-      const response = await callSeedModel(question, context);
-      chatMessages.lastChild.remove();
-      appendMessage(
-        "assistant",
-        `回答：${response.answer}<br/>引用：${response.citations.join("、")}<br/>追问：${response.follow_up}`,
-        "AI · JSON"
-      );
-    });
-
-    const updateMemberCard = (user) => {
-      document.getElementById("memberName").textContent = `会员：${user.name}`;
-      document.getElementById("memberTier").textContent = `等级：${user.level}`;
-      document.getElementById("memberId").textContent = user.id;
-      document.getElementById("memberPoints").textContent = user.points;
-    };
-
-    const setMemberView = (user) => {
-      updateMemberCard(user);
-      document.getElementById("memberCard").classList.remove("hidden");
-      document.getElementById("loginPanel").classList.add("hidden");
-    };
-
-    const persistMember = (user) => {
-      localStorage.setItem("yunwanqian_member", JSON.stringify(user));
-      setMemberView(user);
-    };
-
-    const authModal = document.getElementById("authModal");
-    const modalTitle = document.getElementById("modalTitle");
-
-    const openModal = (type) => {
-      modalTitle.textContent = type === "register" ? "会员注册" : "会员登录";
-      authModal.classList.add("active");
-    };
-
-    document.getElementById("loginBtn").addEventListener("click", () => openModal("login"));
-    document.getElementById("registerBtn").addEventListener("click", () => openModal("register"));
-    document.getElementById("modalClose").addEventListener("click", () => authModal.classList.remove("active"));
-
-    const registerAccount = async (account, password, name) => {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ account, password, name }),
-      });
-      return response.json();
-    };
-
-    const loginAccount = async (account, password) => {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ account, password }),
-      });
-      return response.json();
-    };
-
-    const showAuthMessage = (message) => {
-      appendMessage("assistant", message, "系统");
-    };
-
-    document.getElementById("inlineLogin").addEventListener("click", async () => {
-      const account = document.getElementById("loginAccount").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-      if (!account || !password) return;
-      const result = await loginAccount(account, password);
-      if (!result.ok) {
-        showAuthMessage(result.message);
-        return;
-      }
-      persistMember(result.user);
-    });
-
-    document.getElementById("inlineRegister").addEventListener("click", async () => {
-      const account = document.getElementById("loginAccount").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-      const name = document.getElementById("loginName").value.trim();
-      if (!account || !password || !name) return;
-      const result = await registerAccount(account, password, name);
-      if (!result.ok) {
-        showAuthMessage(result.message);
-        return;
-      }
-      persistMember(result.user);
-    });
-
-    document.getElementById("modalSubmit").addEventListener("click", async () => {
-      const name = document.getElementById("modalName").value.trim();
-      const account = document.getElementById("modalAccount").value.trim();
-      const password = document.getElementById("modalPassword").value.trim();
-      if (!account || !password) return;
-      const result =
-        modalTitle.textContent === "会员注册"
-          ? await registerAccount(account, password, name || "贵宾")
-          : await loginAccount(account, password);
-      if (!result.ok) {
-        showAuthMessage(result.message);
-        return;
-      }
-      persistMember(result.user);
-      authModal.classList.remove("active");
-    });
-
-    let lastScrollY = window.scrollY;
-    window.addEventListener("scroll", () => {
-      const currentScroll = window.scrollY;
-      const header = document.querySelector("header");
-      if (currentScroll > lastScrollY && currentScroll > 120) {
-        header.classList.add("hidden");
-      } else {
-        header.classList.remove("hidden");
-      }
-      lastScrollY = currentScroll;
-    });
-
-    const tryonUpload = document.getElementById("tryonUpload");
-    const tryonImage = document.getElementById("tryonImage");
-    const tryonCanvas = document.getElementById("tryonCanvas");
-    const tryonStyle = document.getElementById("tryonStyle");
-
-    const drawTryon = (imageSrc, style) => {
-      const ctx = tryonCanvas.getContext("2d");
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        tryonCanvas.width = img.width;
-        tryonCanvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
-        ctx.fillStyle = "rgba(181, 29, 51, 0.25)";
-        ctx.fillRect(0, 0, img.width, img.height);
-        ctx.fillStyle = "rgba(200, 167, 107, 0.35)";
-        ctx.fillRect(img.width * 0.1, img.height * 0.2, img.width * 0.8, img.height * 0.6);
-        ctx.fillStyle = "rgba(0,0,0,0.4)";
-        ctx.fillRect(20, img.height - 80, img.width - 40, 60);
-        ctx.fillStyle = "#f5f2ec";
-        ctx.font = "28px 'Noto Serif SC'";
-        ctx.fillText(`AI 试穿 · ${style}`, 40, img.height - 40);
-      };
-      img.src = imageSrc;
-    };
-
-    document.getElementById("runTryon").addEventListener("click", () => {
-      drawTryon(tryonImage.src, tryonStyle.value);
-    });
-
-    tryonUpload.addEventListener("change", (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        tryonImage.src = reader.result;
-        drawTryon(reader.result, tryonStyle.value);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    const stored = localStorage.getItem("yunwanqian_member");
-    if (stored) {
-      const user = JSON.parse(stored);
-      setMemberView(user);
-      document.getElementById("loginName").value = user.name || "";
-      document.getElementById("loginAccount").value = user.account || "";
-    }
-    appendMessage("assistant", "您好，我是韵万千 AI 客服，请问今天想了解哪类旗袍定制服务？", "AI");
-    drawTryon(tryonImage.src, tryonStyle.value);
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>

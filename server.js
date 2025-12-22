@@ -43,6 +43,9 @@ const handleRegister = async (req, res) => {
   if (users.find((user) => user.account === account)) {
     return sendJson(res, 409, { ok: false, message: "账号已存在" });
   }
+  if (users.find((user) => user.name === name)) {
+    return sendJson(res, 409, { ok: false, message: "昵称已被占用" });
+  }
   const level = "星耀 · 尊享";
   const points = Math.floor(1200 + Math.random() * 800);
   const id = `YWQ-${account.slice(-4)}-${Math.floor(1000 + Math.random() * 9000)}`;
