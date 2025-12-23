@@ -260,6 +260,10 @@ const initTryOn = () => {
   const tryonCamera = document.getElementById("tryonCamera");
   const tryonCanvas = document.getElementById("tryonCanvas");
   const garmentGallery = document.getElementById("garmentGallery");
+  if (!tryonUpload || !tryonCamera || !tryonCanvas || !garmentGallery) {
+    showToast("试穿提示", "试穿模块加载失败。（错误码：TRYON-004）");
+    return;
+  }
   let selectedGarment = garmentGallery.querySelector(".gallery-item.selected")?.dataset.image;
   let userImageData = "";
 
@@ -415,7 +419,15 @@ const initMemberSparkle = () => {
 
 
 const initToast = () => {
+  const toast = document.getElementById("toast");
+  const toastCard = toast.querySelector(".toast-card");
   document.getElementById("toastClose").addEventListener("click", closeToast);
+  toast.addEventListener("click", (event) => {
+    if (event.target === toast) {
+      closeToast();
+    }
+  });
+  toastCard.addEventListener("click", (event) => event.stopPropagation());
 };
 
 const initMemberState = () => {
