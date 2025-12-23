@@ -252,6 +252,32 @@ section {
   object-fit: cover;
 }
 
+.gallery-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.gallery-item {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.gallery-item img {
+  border-radius: 12px;
+  height: 140px;
+  object-fit: cover;
+}
+
+.gallery-item.selected {
+  border-color: var(--gold);
+  box-shadow: 0 10px 30px rgba(200, 167, 107, 0.25);
+}
+
 .feature-icon {
   width: 44px;
   height: 44px;
@@ -449,6 +475,12 @@ section {
   font-family: inherit;
 }
 
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 6px 0;
+}
+
 .ai-layout {
   display: grid;
   gap: 24px;
@@ -510,6 +542,10 @@ section {
   border-radius: var(--radius-md);
   height: 320px;
   object-fit: cover;
+}
+
+#tryonCamera {
+  margin-top: 10px;
 }
 
 .tryon-output {

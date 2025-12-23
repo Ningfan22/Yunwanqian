@@ -148,7 +148,7 @@
           </div>
         </div>
         <div class="login-panel" id="loginPanel">
-          <h3>会员登录 / 注册</h3>
+          <h3>会员登录</h3>
           <div class="field">
             <label>账号</label>
             <input type="text" id="loginAccount" placeholder="请输入账号" />
@@ -157,11 +157,21 @@
             <label>密码</label>
             <input type="password" id="loginPassword" placeholder="请输入密码" />
           </div>
-          <div class="field">
-            <label>会员昵称（注册时填写）</label>
-            <input type="text" id="loginName" placeholder="例如：悦雅" />
-          </div>
           <button class="btn" id="inlineLogin">账号登录</button>
+          <div class="divider"></div>
+          <h3>会员注册</h3>
+          <div class="field">
+            <label>注册账号</label>
+            <input type="text" id="registerAccount" placeholder="请输入账号" />
+          </div>
+          <div class="field">
+            <label>注册密码</label>
+            <input type="password" id="registerPassword" placeholder="请输入密码" />
+          </div>
+          <div class="field">
+            <label>会员昵称</label>
+            <input type="text" id="registerName" placeholder="例如：悦雅" />
+          </div>
           <button class="btn secondary" id="inlineRegister">立即注册</button>
           <small>
             登录后解锁电子会员卡、AI 造型方案与专属优惠。
@@ -174,8 +184,7 @@
       <div class="container">
         <h2 class="section-title">AI 客服 · RAG 智能问答</h2>
         <p class="section-subtitle">
-          使用 Seed-1-6-flash 结合私有知识库与固定 Prompt，返回 JSON 结构。
-          当前提供模拟知识库，支持实时替换为企业 API。
+          直连豆包 Seed-1-6-flash 模型与固定 Prompt，实时生成高端定制咨询回复。
         </p>
         <div class="ai-layout">
           <div class="chat-box">
@@ -197,23 +206,16 @@
 
     <section id="tryon">
       <div class="container">
-        <h2 class="section-title">AI 试穿系统</h2>
+        <h2 class="section-title">AI 试穿系统（Doubao-Seedream-4.5）</h2>
         <p class="section-subtitle">
-          上传个人照后生成试穿预览，模拟湘派刺绣与轮廓效果。当前提供前端原型演示，可替换为模型服务。
+          选择店内服饰后上传照片或拍照，生成试穿视觉。模型输出失败时提供本地融合预览。
         </p>
         <div class="ai-layout">
           <div class="tryon">
             <div class="field">
-              <label>上传照片</label>
+              <label>上传照片 / 拍照</label>
               <input type="file" id="tryonUpload" accept="image/*" />
-            </div>
-            <div class="field">
-              <label>选择风格</label>
-              <select id="tryonStyle">
-                <option value="晨雾银杏">晨雾银杏</option>
-                <option value="绛红云锦">绛红云锦</option>
-                <option value="碧影芙蓉">碧影芙蓉</option>
-              </select>
+              <input type="file" id="tryonCamera" accept="image/*" capture="environment" />
             </div>
             <button class="btn" id="runTryon">生成试穿效果</button>
             <div class="tryon-preview">
@@ -223,18 +225,7 @@
               </div>
             </div>
           </div>
-          <div class="glass-card">
-            <h3>试穿说明</h3>
-            <p class="muted">
-              模拟系统会将刺绣纹样叠加于试穿图像，并生成高定风格的滤镜层。
-              可以在接入 AI 试穿模型后，将该模块直接替换为真实推理结果。
-            </p>
-            <ul class="member-benefits">
-              <li><span>✧</span> 自动识别人像比例与姿态</li>
-              <li><span>✧</span> 生成 3 套风格试穿方案</li>
-              <li><span>✧</span> 支持横屏 / 竖屏输出</li>
-            </ul>
-          </div>
+          <div class="glass-card\">\n            <h3>店内服饰图片集</h3>\n            <p class=\"muted\">选择一款服饰用于 AI 试穿，将自动融入您的个人照片。</p>\n            <div class=\"gallery-grid\" id=\"garmentGallery\">\n              <button class=\"gallery-item selected\" data-image=\"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80\">\n                <img src=\"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80\" alt=\"服饰一\" />\n              </button>\n              <button class=\"gallery-item\" data-image=\"https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=900&q=80\">\n                <img src=\"https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=600&q=80\" alt=\"服饰二\" />\n              </button>\n              <button class=\"gallery-item\" data-image=\"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80\">\n                <img src=\"https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=600&q=80\" alt=\"服饰三\" />\n              </button>\n              <button class=\"gallery-item\" data-image=\"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80\">\n                <img src=\"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80\" alt=\"服饰四\" />\n              </button>\n            </div>\n          </div>
         </div>
       </div>
     </section>
@@ -281,7 +272,7 @@
         <label>密码</label>
         <input type="password" id="modalPassword" placeholder="请输入密码" />
       </div>
-      <div class="field">
+      <div class="field" id="modalNameField">
         <label>会员昵称（注册时填写）</label>
         <input type="text" id="modalName" placeholder="例如：韵雅" />
       </div>

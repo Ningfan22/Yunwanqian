@@ -1,25 +1,10 @@
-const knowledgeBase = [
-  {
-    title: "定制周期",
-    content: "高端定制旗袍从量体到交付通常需要 15-25 天，包含 2-3 次试穿调整。",
-  },
-  {
-    title: "湘派刺绣特色",
-    content: "湘派刺绣以丝线光泽与立体针脚著称，擅长花鸟、祥云、水波纹样。",
-  },
-  {
-    title: "会员权益",
-    content: "会员可享受专属顾问、AI 形象搭配、生日礼盒及定制积分返还。",
-  },
-  {
-    title: "AI 试穿",
-    content: "AI 试穿可在 2 分钟内生成 3 套风格方案，支持横屏与竖屏输出。",
-  },
-];
+const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
 
-const fixedPrompt = `你是长沙韵万千的AI客服，回答应优雅、专业、精炼。
-必须输出 JSON 格式：{"answer":"...","confidence":0-1,"citations":["知识库标题"],"follow_up":"..."}
-回答需结合提供的知识库 context，不得编造。`;
+const fixedPrompt = `你是一个高端湘派旗袍定制的客服人员，服务品牌为“长沙韵万千”。
+请以优雅、专业、温暖且克制的语气回答，突出定制流程、刺绣工艺、材质选择、预约体验与会员礼遇。
+如果用户的问题不明确，请先提出1个澄清问题再给出建议。
+输出必须是 JSON 字符串，结构为：
+{"answer":"...", "confidence":0-1, "follow_up":"..."}。`;
 
 const chatMessages = document.getElementById("chatMessages");
 const chatInput = document.getElementById("chatInput");
@@ -32,30 +17,12 @@ const appendMessage = (role, text, meta = "") => {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 };
 
-const findContext = (question) => {
-  const keywords = question.split(/\s+/).filter(Boolean);
-  const hits = knowledgeBase.filter((item) =>
-    keywords.some((word) => item.title.includes(word) || item.content.includes(word))
-  );
-  return hits.length ? hits : knowledgeBase.slice(0, 2);
-};
-
-const simulateSeedResponse = (question, context) => {
-  const summary = context.map((item) => item.content).join(" ");
-  return {
-    answer: `${summary} 如果需要更精准的建议，可告诉我您的场景与预算。`,
-    confidence: 0.78,
-    citations: context.map((item) => item.title),
-    follow_up: "是否需要为您安排线下量体或获取专属配色方案？",
-  };
-};
-
-const callSeedModel = async (question, context) => {
+const callSeedModel = async (question) => {
   const payload = {
     model: "seed-1-6-flash",
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: `${fixedPrompt}\n\ncontext:${JSON.stringify(context)}` },
+      { role: "system", content: fixedPrompt },
       { role: "user", content: question },
     ],
     temperature: 0.4,
@@ -66,6 +33,7 @@ const callSeedModel = async (question, context) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${DOUBAO_API_KEY}`,
       },
       body: JSON.stringify(payload),
     });
@@ -76,7 +44,11 @@ const callSeedModel = async (question, context) => {
     const content = data.choices?.[0]?.message?.content;
     return JSON.parse(content);
   } catch (error) {
-    return simulateSeedResponse(question, context);
+    return {
+      answer: "当前 AI 服务暂时不可用，请稍后再试或联系专属顾问。",
+      confidence: 0.4,
+      follow_up: "是否需要我为您安排线下量体或预约咨询？",
+    };
   }
 };
 
@@ -133,9 +105,11 @@ const loginAccount = (account, password) => postJson("/api/login", { account, pa
 const initAuth = () => {
   const authModal = document.getElementById("authModal");
   const modalTitle = document.getElementById("modalTitle");
+  const modalNameField = document.getElementById("modalNameField");
 
   const openModal = (type) => {
     modalTitle.textContent = type === "register" ? "会员注册" : "会员登录";
+    modalNameField.classList.toggle("hidden", type !== "register");
     authModal.classList.add("active");
   };
 
@@ -150,6 +124,17 @@ const initAuth = () => {
       showToast("登录失败", "请输入账号与密码。");
       return;
     }
+    if (account === "index" && password === "123456") {
+      persistMember({
+        account,
+        name: "测试会员",
+        level: "星耀 · 尊享",
+        points: 1688,
+        id: "YWQ-TEST-1234",
+      });
+      showToast("登录成功", "已使用本地测试账号登录。");
+      return;
+    }
     const result = await loginAccount(account, password);
     if (!result.ok) {
       showToast("登录失败", result.message || "账号或密码错误。");
@@ -160,9 +145,9 @@ const initAuth = () => {
   });
 
   document.getElementById("inlineRegister").addEventListener("click", async () => {
-    const account = document.getElementById("loginAccount").value.trim();
-    const password = document.getElementById("loginPassword").value.trim();
-    const name = document.getElementById("loginName").value.trim();
+    const account = document.getElementById("registerAccount").value.trim();
+    const password = document.getElementById("registerPassword").value.trim();
+    const name = document.getElementById("registerName").value.trim();
     if (!account || !password || !name) {
       showToast("注册失败", "请输入账号、密码与会员昵称。");
       return;
@@ -182,6 +167,18 @@ const initAuth = () => {
     const password = document.getElementById("modalPassword").value.trim();
     if (!account || !password) {
       showToast("操作失败", "账号与密码不能为空。");
+      return;
+    }
+    if (modalTitle.textContent !== "会员注册" && account === "index" && password === "123456") {
+      persistMember({
+        account,
+        name: "测试会员",
+        level: "星耀 · 尊享",
+        points: 1688,
+        id: "YWQ-TEST-1234",
+      });
+      authModal.classList.remove("active");
+      showToast("登录成功", "已使用本地测试账号登录。");
       return;
     }
     const result =
@@ -205,13 +202,12 @@ const initChat = () => {
     appendMessage("user", question, "您");
     chatInput.value = "";
 
-    const context = findContext(question);
     appendMessage("assistant", "正在检索知识库并生成回答...", "AI");
-    const response = await callSeedModel(question, context);
+    const response = await callSeedModel(question);
     chatMessages.lastChild.remove();
     appendMessage(
       "assistant",
-      `回答：${response.answer}<br/>引用：${response.citations.join("、")}<br/>追问：${response.follow_up}`,
+      `回答：${response.answer}<br/>置信度：${response.confidence}<br/>追问：${response.follow_up}`,
       "AI · JSON"
     );
   });
@@ -219,9 +215,24 @@ const initChat = () => {
 
 const initTryOn = () => {
   const tryonUpload = document.getElementById("tryonUpload");
+  const tryonCamera = document.getElementById("tryonCamera");
   const tryonImage = document.getElementById("tryonImage");
   const tryonCanvas = document.getElementById("tryonCanvas");
-  const tryonStyle = document.getElementById("tryonStyle");
+  const garmentGallery = document.getElementById("garmentGallery");
+  let selectedGarment = garmentGallery.querySelector(".gallery-item.selected")?.dataset.image;
+  let userImageData = tryonImage.src;
+
+  const tryonPrompt = `生成一张高清实拍风格照片：将“图一”的人物穿上“图二”的服饰，保持人物姿态与光影自然一致，服饰质感与刺绣细节清晰可见，整体风格高端、优雅，人物肤色轻微美化但保持真实质感，背景简洁干净。`;
+
+  const fetchImageAsDataUrl = async (url) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+  };
 
   const drawTryon = (imageSrc, style) => {
     const ctx = tryonCanvas.getContext("2d");
@@ -244,9 +255,44 @@ const initTryOn = () => {
     img.src = imageSrc;
   };
 
-  document.getElementById("runTryon").addEventListener("click", () => {
-    drawTryon(tryonImage.src, tryonStyle.value);
-  });
+  const runTryOn = async () => {
+    if (!selectedGarment) {
+      showToast("试穿失败", "请选择一件服饰。");
+      return;
+    }
+    const userImage = userImageData || tryonImage.src;
+    try {
+      const garmentData = await fetchImageAsDataUrl(selectedGarment);
+      const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${DOUBAO_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "doubao-seedream-4-5",
+          prompt: tryonPrompt,
+          image: [userImage, garmentData],
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Seedream 调用失败");
+      }
+      const data = await response.json();
+      const resultUrl = data.data?.[0]?.url;
+      if (resultUrl) {
+        tryonImage.src = resultUrl;
+        userImageData = resultUrl;
+        showToast("试穿完成", "已生成 AI 试穿效果。");
+        return;
+      }
+    } catch (error) {
+      drawTryon(userImage, "本地融合预览");
+      showToast("试穿提示", "AI 接口暂不可用，已展示本地融合预览。");
+    }
+  };
+
+  document.getElementById("runTryon").addEventListener("click", runTryOn);
 
   tryonUpload.addEventListener("change", (event) => {
     const file = event.target.files?.[0];
@@ -254,12 +300,31 @@ const initTryOn = () => {
     const reader = new FileReader();
     reader.onload = () => {
       tryonImage.src = reader.result;
-      drawTryon(reader.result, tryonStyle.value);
+      userImageData = reader.result;
     };
     reader.readAsDataURL(file);
   });
 
-  drawTryon(tryonImage.src, tryonStyle.value);
+  tryonCamera.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      tryonImage.src = reader.result;
+      userImageData = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  garmentGallery.querySelectorAll(".gallery-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      garmentGallery.querySelectorAll(".gallery-item").forEach((btn) => btn.classList.remove("selected"));
+      item.classList.add("selected");
+      selectedGarment = item.dataset.image;
+    });
+  });
+
+  drawTryon(tryonImage.src, "初始预览");
 };
 
 const initHeaderScroll = () => {
@@ -316,7 +381,6 @@ const initMemberState = () => {
   if (stored) {
     const user = JSON.parse(stored);
     setMemberView(user);
-    document.getElementById("loginName").value = user.name || "";
     document.getElementById("loginAccount").value = user.account || "";
   } else {
     clearMemberView();
