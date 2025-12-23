@@ -45,7 +45,7 @@ const callSeedModel = async (question) => {
     return JSON.parse(content);
   } catch (error) {
     return {
-      answer: "当前 AI 服务暂时不可用，请稍后再试或联系专属顾问。",
+      answer: "当前 AI 服务暂时不可用，请稍后再试或联系专属顾问。（错误码：RAG-001）",
       confidence: 0.4,
       follow_up: "是否需要我为您安排线下量体或预约咨询？",
     };
@@ -68,17 +68,28 @@ const updateMemberCard = (user) => {
   document.getElementById("memberTier").textContent = `等级：${user.level}`;
   document.getElementById("memberId").textContent = user.id;
   document.getElementById("memberPoints").textContent = user.points;
+  document.getElementById("userName").textContent = user.name;
+  document.getElementById("panelName").textContent = user.name;
+  document.getElementById("panelLevel").textContent = `等级：${user.level}`;
+  document.getElementById("panelMemberName").textContent = `会员：${user.name}`;
+  document.getElementById("panelMemberTier").textContent = `等级：${user.level}`;
+  document.getElementById("panelMemberId").textContent = user.id;
+  document.getElementById("panelMemberPoints").textContent = user.points;
 };
 
 const setMemberView = (user) => {
   updateMemberCard(user);
   document.getElementById("memberCard").classList.remove("hidden");
   document.getElementById("loginPanel").classList.add("hidden");
+  document.getElementById("authButtons").classList.add("hidden");
+  document.getElementById("userBadge").classList.remove("hidden");
 };
 
 const clearMemberView = () => {
   document.getElementById("memberCard").classList.add("hidden");
   document.getElementById("loginPanel").classList.remove("hidden");
+  document.getElementById("authButtons").classList.remove("hidden");
+  document.getElementById("userBadge").classList.add("hidden");
 };
 
 const persistMember = (user) => {
@@ -106,6 +117,7 @@ const initAuth = () => {
   const authModal = document.getElementById("authModal");
   const modalTitle = document.getElementById("modalTitle");
   const modalNameField = document.getElementById("modalNameField");
+  const userPanel = document.getElementById("userPanel");
 
   const openModal = (type) => {
     modalTitle.textContent = type === "register" ? "会员注册" : "会员登录";
@@ -121,7 +133,7 @@ const initAuth = () => {
     const account = document.getElementById("loginAccount").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
     if (!account || !password) {
-      showToast("登录失败", "请输入账号与密码。");
+      showToast("登录失败", "请输入账号与密码。（错误码：AUTH-LOGIN-001）");
       return;
     }
     if (account === "index" && password === "123456") {
@@ -137,7 +149,7 @@ const initAuth = () => {
     }
     const result = await loginAccount(account, password);
     if (!result.ok) {
-      showToast("登录失败", result.message || "账号或密码错误。");
+      showToast("登录失败", `${result.message || "账号或密码错误。"}（错误码：AUTH-LOGIN-002）`);
       return;
     }
     persistMember(result.user);
@@ -149,12 +161,12 @@ const initAuth = () => {
     const password = document.getElementById("registerPassword").value.trim();
     const name = document.getElementById("registerName").value.trim();
     if (!account || !password || !name) {
-      showToast("注册失败", "请输入账号、密码与会员昵称。");
+      showToast("注册失败", "请输入账号、密码与会员昵称。（错误码：AUTH-REG-001）");
       return;
     }
     const result = await registerAccount(account, password, name);
     if (!result.ok) {
-      showToast("注册失败", result.message || "注册未成功。");
+      showToast("注册失败", `${result.message || "注册未成功。"}（错误码：AUTH-REG-002）`);
       return;
     }
     persistMember(result.user);
@@ -166,7 +178,7 @@ const initAuth = () => {
     const account = document.getElementById("modalAccount").value.trim();
     const password = document.getElementById("modalPassword").value.trim();
     if (!account || !password) {
-      showToast("操作失败", "账号与密码不能为空。");
+      showToast("操作失败", "账号与密码不能为空。（错误码：AUTH-MODAL-001）");
       return;
     }
     if (modalTitle.textContent !== "会员注册" && account === "index" && password === "123456") {
@@ -186,12 +198,42 @@ const initAuth = () => {
         ? await registerAccount(account, password, name || "贵宾")
         : await loginAccount(account, password);
     if (!result.ok) {
-      showToast("操作失败", result.message || "请检查填写内容。");
+      showToast("操作失败", `${result.message || "请检查填写内容。"}（错误码：AUTH-MODAL-002）`);
       return;
     }
     persistMember(result.user);
     authModal.classList.remove("active");
     showToast("操作成功", `欢迎您，${result.user.name}。`);
+  });
+
+  document.getElementById("userBadge").addEventListener("click", () => {
+    userPanel.classList.add("active");
+  });
+
+  document.getElementById("closeUserPanel").addEventListener("click", () => {
+    userPanel.classList.remove("active");
+  });
+
+  document.getElementById("updateNameBtn").addEventListener("click", () => {
+    const stored = localStorage.getItem("yunwanqian_member");
+    const name = document.getElementById("panelNameInput").value.trim();
+    if (!stored || !name) {
+      showToast("修改失败", "请输入新的昵称。（错误码：AUTH-NAME-001）");
+      return;
+    }
+    const user = JSON.parse(stored);
+    const updated = { ...user, name };
+    persistMember(updated);
+    document.getElementById("panelNameInput").value = "";
+    showToast("修改成功", "昵称已更新。");
+  });
+
+  document.getElementById("contactSupport").addEventListener("click", () => {
+    showToast("联系客服", "请致电 400-876-8899 或在线留言。（错误码：SUPPORT-000）");
+  });
+
+  document.getElementById("goRegister").addEventListener("click", () => {
+    openModal("register");
   });
 };
 
@@ -216,11 +258,10 @@ const initChat = () => {
 const initTryOn = () => {
   const tryonUpload = document.getElementById("tryonUpload");
   const tryonCamera = document.getElementById("tryonCamera");
-  const tryonImage = document.getElementById("tryonImage");
   const tryonCanvas = document.getElementById("tryonCanvas");
   const garmentGallery = document.getElementById("garmentGallery");
   let selectedGarment = garmentGallery.querySelector(".gallery-item.selected")?.dataset.image;
-  let userImageData = tryonImage.src;
+  let userImageData = "";
 
   const tryonPrompt = `生成一张高清实拍风格照片：将“图一”的人物穿上“图二”的服饰，保持人物姿态与光影自然一致，服饰质感与刺绣细节清晰可见，整体风格高端、优雅，人物肤色轻微美化但保持真实质感，背景简洁干净。`;
 
@@ -256,11 +297,15 @@ const initTryOn = () => {
   };
 
   const runTryOn = async () => {
-    if (!selectedGarment) {
-      showToast("试穿失败", "请选择一件服饰。");
-      return;
-    }
-    const userImage = userImageData || tryonImage.src;
+      if (!selectedGarment) {
+        showToast("试穿失败", "请选择一件服饰。（错误码：TRYON-001）");
+        return;
+      }
+      const userImage = userImageData;
+      if (!userImage) {
+        showToast("试穿失败", "请先上传或拍摄照片。（错误码：TRYON-003）");
+        return;
+      }
     try {
       const garmentData = await fetchImageAsDataUrl(selectedGarment);
       const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/images/generations", {
@@ -281,14 +326,13 @@ const initTryOn = () => {
       const data = await response.json();
       const resultUrl = data.data?.[0]?.url;
       if (resultUrl) {
-        tryonImage.src = resultUrl;
         userImageData = resultUrl;
         showToast("试穿完成", "已生成 AI 试穿效果。");
         return;
       }
     } catch (error) {
       drawTryon(userImage, "本地融合预览");
-      showToast("试穿提示", "AI 接口暂不可用，已展示本地融合预览。");
+      showToast("试穿提示", "AI 接口暂不可用，已展示本地融合预览。（错误码：TRYON-002）");
     }
   };
 
@@ -299,7 +343,6 @@ const initTryOn = () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      tryonImage.src = reader.result;
       userImageData = reader.result;
     };
     reader.readAsDataURL(file);
@@ -310,7 +353,6 @@ const initTryOn = () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      tryonImage.src = reader.result;
       userImageData = reader.result;
     };
     reader.readAsDataURL(file);
@@ -324,7 +366,7 @@ const initTryOn = () => {
     });
   });
 
-  drawTryon(tryonImage.src, "初始预览");
+  drawTryon("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", "初始预览");
 };
 
 const initHeaderScroll = () => {

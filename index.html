@@ -26,9 +26,13 @@
       <a href="#tryon">AI 试穿</a>
       <a href="#contact">预约</a>
     </nav>
-    <div class="cta-group">
+    <div class="cta-group" id="authButtons">
       <button class="btn secondary" id="loginBtn">登录</button>
       <button class="btn" id="registerBtn">注册</button>
+    </div>
+    <div class="user-badge hidden" id="userBadge">
+      <img id="userAvatar" src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80" alt="用户头像" />
+      <span id="userName">会员</span>
     </div>
   </header>
 
@@ -158,24 +162,10 @@
             <input type="password" id="loginPassword" placeholder="请输入密码" />
           </div>
           <button class="btn" id="inlineLogin">账号登录</button>
-          <div class="divider"></div>
-          <h3>会员注册</h3>
-          <div class="field">
-            <label>注册账号</label>
-            <input type="text" id="registerAccount" placeholder="请输入账号" />
-          </div>
-          <div class="field">
-            <label>注册密码</label>
-            <input type="password" id="registerPassword" placeholder="请输入密码" />
-          </div>
-          <div class="field">
-            <label>会员昵称</label>
-            <input type="text" id="registerName" placeholder="例如：悦雅" />
-          </div>
-          <button class="btn secondary" id="inlineRegister">立即注册</button>
           <small>
             登录后解锁电子会员卡、AI 造型方案与专属优惠。
           </small>
+          <button class="link-button" id="goRegister">还没注册，立即注册</button>
         </div>
       </div>
     </section>
@@ -214,12 +204,22 @@
           <div class="tryon">
             <div class="field">
               <label>上传照片 / 拍照</label>
-              <input type="file" id="tryonUpload" accept="image/*" />
-              <input type="file" id="tryonCamera" accept="image/*" capture="environment" />
+              <div class="upload-actions">
+                <label class="upload-btn">
+                  上传图片
+                  <input type="file" id="tryonUpload" accept="image/*" />
+                </label>
+                <label class="upload-btn secondary">
+                  拍摄照片
+                  <input type="file" id="tryonCamera" accept="image/*" capture="environment" />
+                </label>
+              </div>
             </div>
             <button class="btn" id="runTryon">生成试穿效果</button>
             <div class="tryon-preview">
-              <img id="tryonImage" src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80" alt="试穿预览" />
+              <div class="tryon-placeholder">
+                <p>试穿结果将在此展示</p>
+              </div>
               <div class="tryon-output">
                 <canvas id="tryonCanvas" width="480" height="640"></canvas>
               </div>
@@ -278,6 +278,45 @@
       </div>
       <button class="btn" id="modalSubmit">确认</button>
       <button class="btn secondary" id="modalClose">关闭</button>
+    </div>
+  </div>
+
+  <div class="user-panel" id="userPanel">
+    <div class="user-panel-card">
+      <div class="user-panel-header">
+        <img id="panelAvatar" src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80" alt="会员头像" />
+        <div>
+          <strong id="panelName">会员</strong>
+          <p id="panelLevel">等级：星耀 · 尊享</p>
+        </div>
+      </div>
+      <div class="field">
+        <label>修改昵称</label>
+        <input type="text" id="panelNameInput" placeholder="请输入新的昵称" />
+      </div>
+      <button class="btn" id="updateNameBtn">保存昵称</button>
+      <div class="panel-card-preview">
+        <div class="member-card mini" id="panelMemberCard">
+          <div class="member-chip">
+            <span>YUN WAN QIAN</span>
+            <span>ELITE MEMBER</span>
+          </div>
+          <h3 id="panelMemberName">会员：--</h3>
+          <p id="panelMemberTier">等级：星耀 · 尊享</p>
+          <div class="member-info">
+            <div>
+              <div>会员编号</div>
+              <strong id="panelMemberId">YWQ-0000-0000</strong>
+            </div>
+            <div>
+              <div>积分</div>
+              <strong id="panelMemberPoints">0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn secondary" id="contactSupport">联系客服</button>
+      <button class="btn secondary" id="closeUserPanel">关闭</button>
     </div>
   </div>
 
