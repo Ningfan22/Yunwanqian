@@ -1,7 +1,7 @@
 const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
 const DOUBAO_BASE = "https://ark.cn-beijing.volces.com/api/v3";
-const DOUBAO_CHAT_MODEL = "seed-1-6-flash";
-const DOUBAO_TRYON_MODEL = "doubao-seedream-4-5";
+const DOUBAO_CHAT_MODEL = "Doubao-Seed-1.6-flash";
+const DOUBAO_TRYON_MODEL = "Doubao-Seedream-4.5";
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80";
 
 const resolveModel = (key, fallback) => localStorage.getItem(key) || fallback;
