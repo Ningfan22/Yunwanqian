@@ -22,7 +22,6 @@ const appendMessage = (role, text, meta = "") => {
 const callSeedModel = async (question) => {
   const payload = {
     model: "seed-1-6-flash",
-    response_format: { type: "json_object" },
     messages: [
       { role: "system", content: fixedPrompt },
       { role: "user", content: question },
@@ -33,17 +32,22 @@ const callSeedModel = async (question) => {
   try {
     const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/chat/completions", {
       method: "POST",
+      mode: "cors",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${DOUBAO_API_KEY}`,
       },
       body: JSON.stringify(payload),
     });
-    if (!response.ok) {
-      throw new Error("Seed API 请求失败");
+
+    const raw = await response.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (parseErr) {
+      console.warn("RAG 响应解析为文本回退", parseErr, raw);
     }
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.choices?.[0]?.message?.content || raw;
     if (!content) {
       throw new Error("Seed API 响应为空");
     }
@@ -51,13 +55,14 @@ const callSeedModel = async (question) => {
       const parsed = typeof content === "string" ? JSON.parse(content) : content;
       if (parsed?.answer) return parsed;
       return { answer: String(content), follow_up: "是否需要预约量体？" };
-    } catch (parseError) {
+    } catch (parseContentErr) {
+      console.warn("RAG 内容解析回退", parseContentErr, content);
       return { answer: String(content), follow_up: "是否需要预约量体？" };
     }
   } catch (error) {
+    console.error("RAG 调用失败", error);
     return {
-      answer: "当前 AI 服务暂时不可用，请稍后再试或联系专属顾问。（错误码：RAG-001）",
-      confidence: 0.4,
+      answer: "AI 正在为您准备答案，我们先为您推荐旗舰刺绣工坊与专属顾问，是否需要预约？",
       follow_up: "是否需要我为您安排线下量体或预约咨询？",
     };
   }
@@ -247,9 +252,10 @@ const initTryOn = () => {
   const tryonUpload = document.getElementById("tryonUpload");
   const tryonCamera = document.getElementById("tryonCamera");
   const tryonCanvas = document.getElementById("tryonCanvas");
+  const tryonPlaceholder = document.querySelector(".tryon-placeholder");
   const uploadPreview = document.getElementById("uploadPreview");
   const garmentGallery = document.getElementById("garmentGallery");
-  if (!tryonUpload || !tryonCamera || !tryonCanvas || !garmentGallery || !uploadPreview) {
+  if (!tryonUpload || !tryonCamera || !tryonCanvas || !garmentGallery || !uploadPreview || !tryonPlaceholder) {
     showToast("试穿提示", "试穿模块加载失败。（错误码：TRYON-004）");
     return;
   }
@@ -267,6 +273,8 @@ const initTryOn = () => {
       reader.readAsDataURL(blob);
     });
   };
+
+  const toBase64 = (dataUrl) => (dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl);
 
   const drawTryon = (imageSrc, style = "AI 试穿") => {
     const ctx = tryonCanvas.getContext("2d");
@@ -306,20 +314,25 @@ const initTryOn = () => {
         body: JSON.stringify({
           model: "doubao-seedream-4-5",
           prompt: tryonPrompt,
-          image: [userImage, garmentData],
+          image: [toBase64(userImage), toBase64(garmentData)],
         }),
       });
-      if (!response.ok) {
-        throw new Error("Seedream 调用失败");
+      const raw = await response.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch (parseErr) {
+        console.warn("Seedream 响应解析为文本回退", parseErr, raw);
       }
-      const data = await response.json();
       const resultUrl = data.data?.[0]?.url;
       if (resultUrl) {
         drawTryon(resultUrl, "AI 试穿 · Seedream 输出");
+        tryonPlaceholder.classList.add("hidden");
         showToast("试穿完成", "已生成 AI 试穿效果。");
         return;
       }
     } catch (error) {
+      console.error("试穿失败", error);
       showToast("试穿失败", "AI 接口暂不可用，请稍后重试。（错误码：TRYON-002）");
     }
   };
@@ -334,6 +347,7 @@ const initTryOn = () => {
       userImageData = reader.result;
       uploadPreview.innerHTML = `<div class="upload-thumb"><img src="${userImageData}" alt="已上传" /></div>`;
       uploadPreview.classList.remove("hidden");
+      tryonPlaceholder.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
   });
@@ -346,6 +360,7 @@ const initTryOn = () => {
       userImageData = reader.result;
       uploadPreview.innerHTML = `<div class="upload-thumb"><img src="${userImageData}" alt="已拍摄" /></div>`;
       uploadPreview.classList.remove("hidden");
+      tryonPlaceholder.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
   });
@@ -357,8 +372,6 @@ const initTryOn = () => {
       selectedGarment = item.dataset.image;
     });
   });
-
-  drawTryon("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80", "初始预览");
 };
 
 const initHeaderScroll = () => {
