@@ -338,11 +338,22 @@
     </div>
   </div>
 
+  <input type="file" id="avatarInput" accept="image/*" class="sr-only" />
+
   <div class="toast" id="toast">
     <div class="toast-card">
       <strong id="toastTitle">提示</strong>
       <p id="toastMessage"></p>
       <button class="btn secondary" id="toastClose">知道了</button>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-card">
+      <div class="loading-lines">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <p id="loadingText">正在为您处理...</p>
     </div>
   </div>
 

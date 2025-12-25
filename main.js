@@ -1,4 +1,10 @@
 const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
+const DOUBAO_BASE = "https://ark.cn-beijing.volces.com/api/v3";
+const DOUBAO_CHAT_MODEL = "Doubao-Seed-1.6-flash";
+const DOUBAO_TRYON_MODEL = "Doubao-Seedream-4.5";
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80";
+
+const resolveModel = (key, fallback) => localStorage.getItem(key) || fallback;
 
 const fixedPrompt = `你是“长沙韵万千”高端湘派刺绣旗袍的金牌客服。
 回答要求：
@@ -19,9 +25,19 @@ const appendMessage = (role, text, meta = "") => {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 };
 
+const showLoading = (text = "正在为您处理...") => {
+  const overlay = document.getElementById("loadingOverlay");
+  document.getElementById("loadingText").textContent = text;
+  overlay.classList.add("active");
+};
+
+const hideLoading = () => {
+  document.getElementById("loadingOverlay").classList.remove("active");
+};
+
 const callSeedModel = async (question) => {
   const payload = {
-    model: "seed-1-6-flash",
+    model: resolveModel("yunwanqian_chat_model", DOUBAO_CHAT_MODEL),
     messages: [
       { role: "system", content: fixedPrompt },
       { role: "user", content: question },
@@ -30,7 +46,7 @@ const callSeedModel = async (question) => {
   };
 
   try {
-    const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/chat/completions", {
+    const response = await fetch(`${DOUBAO_BASE}/chat/completions`, {
       method: "POST",
       mode: "cors",
       headers: {
@@ -41,6 +57,9 @@ const callSeedModel = async (question) => {
     });
 
     const raw = await response.text();
+    if (!response.ok) {
+      throw new Error(`Seed 响应异常：${response.status} ${raw || ""}`.trim());
+    }
     let data = {};
     try {
       data = raw ? JSON.parse(raw) : {};
@@ -79,6 +98,12 @@ const closeToast = () => {
   document.getElementById("toast").classList.remove("active");
 };
 
+const updateAvatars = (avatar) => {
+  const safeAvatar = avatar || DEFAULT_AVATAR;
+  document.getElementById("userAvatar").src = safeAvatar;
+  document.getElementById("panelAvatar").src = safeAvatar;
+};
+
 const updateMemberCard = (user) => {
   document.getElementById("memberName").textContent = `会员：${user.name}`;
   document.getElementById("memberTier").textContent = `等级：${user.level}`;
@@ -91,6 +116,7 @@ const updateMemberCard = (user) => {
   document.getElementById("panelMemberTier").textContent = `等级：${user.level}`;
   document.getElementById("panelMemberId").textContent = user.id;
   document.getElementById("panelMemberPoints").textContent = user.points;
+  updateAvatars(user.avatar);
 };
 
 const setMemberView = (user) => {
@@ -106,6 +132,7 @@ const clearMemberView = () => {
   document.getElementById("loginPanel").classList.remove("hidden");
   document.getElementById("authButtons").classList.remove("hidden");
   document.getElementById("userBadge").classList.add("hidden");
+  updateAvatars(DEFAULT_AVATAR);
 };
 
 const persistMember = (user) => {
@@ -134,6 +161,7 @@ const buildUser = (account, name = "尊贵会员") => ({
   level: "星耀 · 尊享",
   points: 1888,
   id: generateMemberId(),
+  avatar: DEFAULT_AVATAR,
 });
 
 const initAuth = () => {
@@ -153,10 +181,12 @@ const initAuth = () => {
   document.getElementById("modalClose").addEventListener("click", () => authModal.classList.remove("active"));
 
   document.getElementById("inlineLogin").addEventListener("click", () => {
+    showLoading("正在登录...");
     const account = document.getElementById("loginAccount").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
     if (!account || !password) {
       showToast("登录失败", "请输入账号与密码。（错误码：AUTH-LOGIN-001）");
+      hideLoading();
       return;
     }
     const db = loadUserDB();
@@ -164,14 +194,17 @@ const initAuth = () => {
     const user = stored || buildUser(account, account);
     persistMember(user);
     showToast("登录成功", stored ? `欢迎回来，${user.name}。` : "已使用本地凭证登录。");
+    hideLoading();
   });
 
   document.getElementById("modalSubmit").addEventListener("click", () => {
+    showLoading("正在提交...");
     const name = document.getElementById("modalName").value.trim();
     const account = document.getElementById("modalAccount").value.trim();
     const password = document.getElementById("modalPassword").value.trim();
     if (!account || !password) {
       showToast("操作失败", "账号与密码不能为空。（错误码：AUTH-MODAL-001）");
+      hideLoading();
       return;
     }
 
@@ -184,11 +217,13 @@ const initAuth = () => {
       persistMember(user);
       authModal.classList.remove("active");
       showToast("登录成功", stored ? `欢迎回来，${user.name}。` : "已使用本地凭证登录。");
+      hideLoading();
       return;
     }
 
     if (!name) {
       showToast("注册失败", "请输入会员昵称。（错误码：AUTH-REG-001）");
+      hideLoading();
       return;
     }
 
@@ -201,6 +236,7 @@ const initAuth = () => {
     persistMember(user);
     authModal.classList.remove("active");
     showToast("注册成功", `欢迎加入，${user.name}。`);
+    hideLoading();
   });
 
   document.getElementById("userBadge").addEventListener("click", () => {
@@ -241,10 +277,12 @@ const initChat = () => {
     appendMessage("user", question, "您");
     chatInput.value = "";
 
+    showLoading("AI 客服正在回复...");
     appendMessage("assistant", "正在检索知识库并生成回答...", "AI");
     const response = await callSeedModel(question);
     chatMessages.lastChild.remove();
-    appendMessage("assistant", `回答：${response.answer}<br/>追问：${response.follow_up || "是否需要预约量体？"}`); 
+    appendMessage("assistant", `回答：${response.answer}<br/>追问：${response.follow_up || "是否需要预约量体？"}`);
+    hideLoading();
   });
 };
 
@@ -303,21 +341,25 @@ const initTryOn = () => {
       showToast("试穿失败", "请先上传或拍摄照片。（错误码：TRYON-003）");
       return;
     }
+    showLoading("AI 试穿生成中...");
     try {
       const garmentData = await fetchImageAsDataUrl(selectedGarment);
-      const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/images/generations", {
+      const response = await fetch(`${DOUBAO_BASE}/images/generations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${DOUBAO_API_KEY}`,
         },
         body: JSON.stringify({
-          model: "doubao-seedream-4-5",
+          model: resolveModel("yunwanqian_tryon_model", DOUBAO_TRYON_MODEL),
           prompt: tryonPrompt,
           image: [toBase64(userImage), toBase64(garmentData)],
         }),
       });
       const raw = await response.text();
+      if (!response.ok) {
+        throw new Error(`Seedream 响应异常：${response.status} ${raw || ""}`.trim());
+      }
       let data = {};
       try {
         data = raw ? JSON.parse(raw) : {};
@@ -329,12 +371,14 @@ const initTryOn = () => {
         drawTryon(resultUrl, "AI 试穿 · Seedream 输出");
         tryonPlaceholder.classList.add("hidden");
         showToast("试穿完成", "已生成 AI 试穿效果。");
+        hideLoading();
         return;
       }
     } catch (error) {
       console.error("试穿失败", error);
       showToast("试穿失败", "AI 接口暂不可用，请稍后重试。（错误码：TRYON-002）");
     }
+    hideLoading();
   };
 
   document.getElementById("runTryon").addEventListener("click", runTryOn);
@@ -371,6 +415,39 @@ const initTryOn = () => {
       item.classList.add("selected");
       selectedGarment = item.dataset.image;
     });
+  });
+};
+
+const initAvatarUpload = () => {
+  const avatarInput = document.getElementById("avatarInput");
+  const userAvatar = document.getElementById("userAvatar");
+  const panelAvatar = document.getElementById("panelAvatar");
+
+  const handleAvatar = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const stored = localStorage.getItem("yunwanqian_member");
+      if (!stored) return;
+      const user = JSON.parse(stored);
+      const updated = { ...user, avatar: reader.result };
+      persistMember(updated);
+      showToast("头像已更新", "已应用新头像，将自动裁剪为圆形。");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  [userAvatar, panelAvatar].forEach((node) => {
+    node.addEventListener("click", (event) => {
+      event.stopPropagation();
+      avatarInput.click();
+    });
+  });
+
+  avatarInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    handleAvatar(file);
+    event.target.value = "";
   });
 };
 
@@ -450,4 +527,5 @@ initChat();
 initTryOn();
 initMemberState();
 initMemberSparkle();
+initAvatarUpload();
 appendMessage("assistant", "您好，我是韵万千 AI 客服，请问今天想了解哪类旗袍定制服务？", "AI");

@@ -31,6 +31,18 @@ body {
   scroll-behavior: smooth;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -132,6 +144,8 @@ nav a:hover {
   height: 34px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .user-badge span {
@@ -349,6 +363,8 @@ section {
   height: 52px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .user-panel-header p {
@@ -476,6 +492,15 @@ section {
   100% {
     transform: translateX(120%);
     opacity: 0;
+  }
+}
+
+@keyframes stitch {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 
@@ -746,6 +771,65 @@ footer {
 
 .toast-card p {
   color: var(--muted);
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 5, 6, 0.65);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 40;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loading-card {
+  width: min(360px, 90vw);
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(200, 167, 107, 0.12), rgba(181, 29, 51, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
+
+.loading-lines {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.loading-lines span {
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(200, 167, 107, 0.1), #c8a76b, rgba(200, 167, 107, 0.1));
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-lines span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-100%);
+  animation: stitch 1.6s linear infinite;
+}
+
+.loading-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .hidden {
