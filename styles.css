@@ -795,35 +795,75 @@ footer {
   width: min(360px, 90vw);
   padding: 20px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(200, 167, 107, 0.12), rgba(181, 29, 51, 0.08));
+  background: linear-gradient(135deg, rgba(200, 167, 107, 0.14), rgba(181, 29, 51, 0.08));
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
   text-align: center;
 }
 
 .loading-lines {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
+  position: relative;
+  width: 180px;
+  height: 120px;
+  margin: 0 auto 12px;
 }
 
 .loading-lines span {
-  display: block;
-  height: 4px;
-  background: linear-gradient(90deg, rgba(200, 167, 107, 0.1), #c8a76b, rgba(200, 167, 107, 0.1));
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  margin: 0 auto;
+  background: linear-gradient(90deg, transparent, #c8a76b, transparent);
   border-radius: 999px;
-  position: relative;
-  overflow: hidden;
+  opacity: 0;
+  animation: stitch-line 1.8s ease-in-out infinite;
 }
 
-.loading-lines span::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
-  transform: translateX(-100%);
-  animation: stitch 1.6s linear infinite;
+.loading-lines span:nth-child(1) {
+  top: 25%;
+  transform: rotate(-18deg);
+  animation-delay: 0s;
+}
+
+.loading-lines span:nth-child(2) {
+  top: 50%;
+  transform: rotate(12deg);
+  animation-delay: 0.35s;
+}
+
+.loading-lines span:nth-child(3) {
+  top: 75%;
+  transform: rotate(-10deg);
+  animation-delay: 0.7s;
+}
+
+.loading-lines span:nth-child(4) {
+  top: 38%;
+  transform: rotate(24deg);
+  animation-delay: 1.05s;
+}
+
+@keyframes stitch-line {
+  0% {
+    opacity: 0;
+    transform: translateX(-40%) scaleX(0.8) rotate(var(--angle, 0deg));
+  }
+  25% {
+    opacity: 1;
+    transform: translateX(0) scaleX(1) rotate(var(--angle, 0deg));
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateX(40%) scaleX(0.9) rotate(var(--angle, 0deg));
+  }
+  80% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-40%) scaleX(0.8) rotate(var(--angle, 0deg));
+  }
 }
 
 .loading-card p {

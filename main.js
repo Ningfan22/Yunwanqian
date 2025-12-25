@@ -1,8 +1,11 @@
 const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
 const DOUBAO_BASE = "https://ark.cn-beijing.volces.com/api/v3";
-const DOUBAO_CHAT_MODEL = "Doubao-Seed-1.6-flash";
-const DOUBAO_TRYON_MODEL = "Doubao-Seedream-4.5";
+const CORS_PROXY = "https://cors.isomorphic-git.org/";
+const DOUBAO_CHAT_MODEL = "seed-1-6-flash";
+const DOUBAO_TRYON_MODEL = "doubao-seedream-4-5";
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80";
+
+const withCorsProxy = (url) => `${CORS_PROXY}${url}`;
 
 const resolveModel = (key, fallback) => localStorage.getItem(key) || fallback;
 
@@ -46,9 +49,8 @@ const callSeedModel = async (question) => {
   };
 
   try {
-    const response = await fetch(`${DOUBAO_BASE}/chat/completions`, {
+    const response = await fetch(withCorsProxy(`${DOUBAO_BASE}/chat/completions`), {
       method: "POST",
-      mode: "cors",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${DOUBAO_API_KEY}`,
@@ -80,8 +82,9 @@ const callSeedModel = async (question) => {
     }
   } catch (error) {
     console.error("RAG 调用失败", error);
+    showToast("AI 对话失败", `豆包接口响应异常，请稍后重试。（错误码：RAG-001）`);
     return {
-      answer: "AI 正在为您准备答案，我们先为您推荐旗舰刺绣工坊与专属顾问，是否需要预约？",
+      answer: "抱歉，AI 客服暂时未能连接成功，建议直接预约人工顾问。",
       follow_up: "是否需要我为您安排线下量体或预约咨询？",
     };
   }
@@ -344,7 +347,7 @@ const initTryOn = () => {
     showLoading("AI 试穿生成中...");
     try {
       const garmentData = await fetchImageAsDataUrl(selectedGarment);
-      const response = await fetch(`${DOUBAO_BASE}/images/generations`, {
+      const response = await fetch(withCorsProxy(`${DOUBAO_BASE}/images/generations`), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -371,14 +374,15 @@ const initTryOn = () => {
         drawTryon(resultUrl, "AI 试穿 · Seedream 输出");
         tryonPlaceholder.classList.add("hidden");
         showToast("试穿完成", "已生成 AI 试穿效果。");
-        hideLoading();
         return;
       }
+      throw new Error("Seedream 响应为空");
     } catch (error) {
       console.error("试穿失败", error);
       showToast("试穿失败", "AI 接口暂不可用，请稍后重试。（错误码：TRYON-002）");
+    } finally {
+      hideLoading();
     }
-    hideLoading();
   };
 
   document.getElementById("runTryon").addEventListener("click", runTryOn);
