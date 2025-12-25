@@ -198,7 +198,7 @@
       <div class="container">
         <h2 class="section-title">AI 试穿系统（Doubao-Seedream-4.5）</h2>
         <p class="section-subtitle">
-          选择店内服饰后上传照片或拍照，生成试穿视觉。模型输出失败时提供本地融合预览。
+          选择店内服饰后上传照片或拍照，生成试穿视觉。接口异常时会提示错误码，便于排查。
         </p>
         <div class="ai-layout">
           <div class="tryon">
@@ -214,6 +214,7 @@
                   <input type="file" id="tryonCamera" accept="image/*" capture="environment" />
                 </label>
               </div>
+              <div class="upload-preview hidden" id="uploadPreview" aria-live="polite"></div>
             </div>
             <button class="btn" id="runTryon">生成试穿效果</button>
             <div class="tryon-preview">

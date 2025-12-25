@@ -44,7 +44,16 @@ const callSeedModel = async (question) => {
     }
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
-    return JSON.parse(content);
+    if (!content) {
+      throw new Error("Seed API 响应为空");
+    }
+    try {
+      const parsed = typeof content === "string" ? JSON.parse(content) : content;
+      if (parsed?.answer) return parsed;
+      return { answer: String(content), follow_up: "是否需要预约量体？" };
+    } catch (parseError) {
+      return { answer: String(content), follow_up: "是否需要预约量体？" };
+    }
   } catch (error) {
     return {
       answer: "当前 AI 服务暂时不可用，请稍后再试或联系专属顾问。（错误码：RAG-001）",
@@ -230,11 +239,7 @@ const initChat = () => {
     appendMessage("assistant", "正在检索知识库并生成回答...", "AI");
     const response = await callSeedModel(question);
     chatMessages.lastChild.remove();
-    appendMessage(
-      "assistant",
-      `回答：${response.answer}<br/>置信度：${response.confidence}<br/>追问：${response.follow_up}`,
-      "AI · JSON"
-    );
+    appendMessage("assistant", `回答：${response.answer}<br/>追问：${response.follow_up || "是否需要预约量体？"}`); 
   });
 };
 
@@ -242,8 +247,9 @@ const initTryOn = () => {
   const tryonUpload = document.getElementById("tryonUpload");
   const tryonCamera = document.getElementById("tryonCamera");
   const tryonCanvas = document.getElementById("tryonCanvas");
+  const uploadPreview = document.getElementById("uploadPreview");
   const garmentGallery = document.getElementById("garmentGallery");
-  if (!tryonUpload || !tryonCamera || !tryonCanvas || !garmentGallery) {
+  if (!tryonUpload || !tryonCamera || !tryonCanvas || !garmentGallery || !uploadPreview) {
     showToast("试穿提示", "试穿模块加载失败。（错误码：TRYON-004）");
     return;
   }
@@ -262,7 +268,7 @@ const initTryOn = () => {
     });
   };
 
-  const drawTryon = (imageSrc, style) => {
+  const drawTryon = (imageSrc, style = "AI 试穿") => {
     const ctx = tryonCanvas.getContext("2d");
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -270,15 +276,11 @@ const initTryOn = () => {
       tryonCanvas.width = img.width;
       tryonCanvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      ctx.fillStyle = "rgba(181, 29, 51, 0.25)";
-      ctx.fillRect(0, 0, img.width, img.height);
-      ctx.fillStyle = "rgba(200, 167, 107, 0.35)";
-      ctx.fillRect(img.width * 0.1, img.height * 0.2, img.width * 0.8, img.height * 0.6);
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.fillRect(20, img.height - 80, img.width - 40, 60);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.32)";
+      ctx.fillRect(0, img.height - 90, img.width, 90);
       ctx.fillStyle = "#f5f2ec";
-      ctx.font = "28px 'Noto Serif SC'";
-      ctx.fillText(`AI 试穿 · ${style}`, 40, img.height - 40);
+      ctx.font = "26px 'Noto Serif SC'";
+      ctx.fillText(`${style}`, 28, img.height - 40);
     };
     img.src = imageSrc;
   };
@@ -313,13 +315,12 @@ const initTryOn = () => {
       const data = await response.json();
       const resultUrl = data.data?.[0]?.url;
       if (resultUrl) {
-        userImageData = resultUrl;
+        drawTryon(resultUrl, "AI 试穿 · Seedream 输出");
         showToast("试穿完成", "已生成 AI 试穿效果。");
         return;
       }
     } catch (error) {
-      drawTryon(userImage, "本地融合预览");
-      showToast("试穿提示", "AI 接口暂不可用，已展示本地融合预览。（错误码：TRYON-002）");
+      showToast("试穿失败", "AI 接口暂不可用，请稍后重试。（错误码：TRYON-002）");
     }
   };
 
@@ -331,6 +332,8 @@ const initTryOn = () => {
     const reader = new FileReader();
     reader.onload = () => {
       userImageData = reader.result;
+      uploadPreview.innerHTML = `<div class="upload-thumb"><img src="${userImageData}" alt="已上传" /></div>`;
+      uploadPreview.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
   });
@@ -341,6 +344,8 @@ const initTryOn = () => {
     const reader = new FileReader();
     reader.onload = () => {
       userImageData = reader.result;
+      uploadPreview.innerHTML = `<div class="upload-thumb"><img src="${userImageData}" alt="已拍摄" /></div>`;
+      uploadPreview.classList.remove("hidden");
     };
     reader.readAsDataURL(file);
   });
