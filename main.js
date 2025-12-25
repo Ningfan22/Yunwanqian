@@ -1,10 +1,12 @@
 const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
 
-const fixedPrompt = `你是一个高端湘派旗袍定制的客服人员，服务品牌为“长沙韵万千”。
-请以优雅、专业、温暖且克制的语气回答，突出定制流程、刺绣工艺、材质选择、预约体验与会员礼遇。
-如果用户的问题不明确，请先提出1个澄清问题再给出建议。
-输出必须是 JSON 字符串，结构为：
-{"answer":"...", "confidence":0-1, "follow_up":"..."}。`;
+const fixedPrompt = `你是“长沙韵万千”高端湘派刺绣旗袍的金牌客服。
+回答要求：
+1) 语气优雅、克制、专业且温暖；
+2) 必须体现定制流程、刺绣工艺、材质选择、预约体验与会员礼遇；
+3) 若问题不明确，先提出 1 个澄清问题再给建议；
+4) 输出严格为 JSON 字符串：{"answer":"...", "confidence":0-1, "follow_up":"..."}；
+5) 如无法回答，请礼貌建议联系专属顾问并给出线下预约方式。`;
 
 const chatMessages = document.getElementById("chatMessages");
 const chatInput = document.getElementById("chatInput");
@@ -97,21 +99,28 @@ const persistMember = (user) => {
   setMemberView(user);
 };
 
-const postJson = async (url, payload) => {
+const loadUserDB = () => {
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    return await response.json();
+    return JSON.parse(localStorage.getItem("yunwanqian_user_db") || "[]");
   } catch (error) {
-    return { ok: false, message: "无法连接服务器，请确认已启动服务。" };
+    return [];
   }
 };
 
-const registerAccount = (account, password, name) => postJson("/api/register", { account, password, name });
-const loginAccount = (account, password) => postJson("/api/login", { account, password });
+const saveUserDB = (list) => localStorage.setItem("yunwanqian_user_db", JSON.stringify(list));
+
+const generateMemberId = () => {
+  const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `YWQ-${suffix}-${Date.now().toString().slice(-4)}`;
+};
+
+const buildUser = (account, name = "尊贵会员") => ({
+  account,
+  name: name || account || "尊贵会员",
+  level: "星耀 · 尊享",
+  points: 1888,
+  id: generateMemberId(),
+});
 
 const initAuth = () => {
   const authModal = document.getElementById("authModal");
@@ -129,51 +138,21 @@ const initAuth = () => {
   document.getElementById("registerBtn").addEventListener("click", () => openModal("register"));
   document.getElementById("modalClose").addEventListener("click", () => authModal.classList.remove("active"));
 
-  document.getElementById("inlineLogin").addEventListener("click", async () => {
+  document.getElementById("inlineLogin").addEventListener("click", () => {
     const account = document.getElementById("loginAccount").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
     if (!account || !password) {
       showToast("登录失败", "请输入账号与密码。（错误码：AUTH-LOGIN-001）");
       return;
     }
-    if (account === "index" && password === "123456") {
-      persistMember({
-        account,
-        name: "测试会员",
-        level: "星耀 · 尊享",
-        points: 1688,
-        id: "YWQ-TEST-1234",
-      });
-      showToast("登录成功", "已使用本地测试账号登录。");
-      return;
-    }
-    const result = await loginAccount(account, password);
-    if (!result.ok) {
-      showToast("登录失败", `${result.message || "账号或密码错误。"}（错误码：AUTH-LOGIN-002）`);
-      return;
-    }
-    persistMember(result.user);
-    showToast("登录成功", `欢迎回来，${result.user.name}。`);
+    const db = loadUserDB();
+    const stored = db.find((item) => item.account === account);
+    const user = stored || buildUser(account, account);
+    persistMember(user);
+    showToast("登录成功", stored ? `欢迎回来，${user.name}。` : "已使用本地凭证登录。");
   });
 
-  document.getElementById("inlineRegister").addEventListener("click", async () => {
-    const account = document.getElementById("registerAccount").value.trim();
-    const password = document.getElementById("registerPassword").value.trim();
-    const name = document.getElementById("registerName").value.trim();
-    if (!account || !password || !name) {
-      showToast("注册失败", "请输入账号、密码与会员昵称。（错误码：AUTH-REG-001）");
-      return;
-    }
-    const result = await registerAccount(account, password, name);
-    if (!result.ok) {
-      showToast("注册失败", `${result.message || "注册未成功。"}（错误码：AUTH-REG-002）`);
-      return;
-    }
-    persistMember(result.user);
-    showToast("注册成功", `欢迎加入，${result.user.name}。`);
-  });
-
-  document.getElementById("modalSubmit").addEventListener("click", async () => {
+  document.getElementById("modalSubmit").addEventListener("click", () => {
     const name = document.getElementById("modalName").value.trim();
     const account = document.getElementById("modalAccount").value.trim();
     const password = document.getElementById("modalPassword").value.trim();
@@ -181,29 +160,33 @@ const initAuth = () => {
       showToast("操作失败", "账号与密码不能为空。（错误码：AUTH-MODAL-001）");
       return;
     }
-    if (modalTitle.textContent !== "会员注册" && account === "index" && password === "123456") {
-      persistMember({
-        account,
-        name: "测试会员",
-        level: "星耀 · 尊享",
-        points: 1688,
-        id: "YWQ-TEST-1234",
-      });
+
+    const db = loadUserDB();
+    const isRegister = modalTitle.textContent === "会员注册";
+
+    if (!isRegister) {
+      const stored = db.find((item) => item.account === account && item.password === password);
+      const user = stored || buildUser(account, account);
+      persistMember(user);
       authModal.classList.remove("active");
-      showToast("登录成功", "已使用本地测试账号登录。");
+      showToast("登录成功", stored ? `欢迎回来，${user.name}。` : "已使用本地凭证登录。");
       return;
     }
-    const result =
-      modalTitle.textContent === "会员注册"
-        ? await registerAccount(account, password, name || "贵宾")
-        : await loginAccount(account, password);
-    if (!result.ok) {
-      showToast("操作失败", `${result.message || "请检查填写内容。"}（错误码：AUTH-MODAL-002）`);
+
+    if (!name) {
+      showToast("注册失败", "请输入会员昵称。（错误码：AUTH-REG-001）");
       return;
     }
-    persistMember(result.user);
+
+    const exists = db.find((item) => item.account === account);
+    const user = exists ? { ...exists, name, password } : { ...buildUser(account, name), password };
+    const nextDB = exists
+      ? db.map((item) => (item.account === account ? user : item))
+      : [...db, user];
+    saveUserDB(nextDB);
+    persistMember(user);
     authModal.classList.remove("active");
-    showToast("操作成功", `欢迎您，${result.user.name}。`);
+    showToast("注册成功", `欢迎加入，${user.name}。`);
   });
 
   document.getElementById("userBadge").addEventListener("click", () => {
@@ -301,15 +284,15 @@ const initTryOn = () => {
   };
 
   const runTryOn = async () => {
-      if (!selectedGarment) {
-        showToast("试穿失败", "请选择一件服饰。（错误码：TRYON-001）");
-        return;
-      }
-      const userImage = userImageData;
-      if (!userImage) {
-        showToast("试穿失败", "请先上传或拍摄照片。（错误码：TRYON-003）");
-        return;
-      }
+    if (!selectedGarment) {
+      showToast("试穿失败", "请选择一件服饰。（错误码：TRYON-001）");
+      return;
+    }
+    const userImage = userImageData;
+    if (!userImage) {
+      showToast("试穿失败", "请先上传或拍摄照片。（错误码：TRYON-003）");
+      return;
+    }
     try {
       const garmentData = await fetchImageAsDataUrl(selectedGarment);
       const response = await fetch("https://ark.cn-beijing.volces.com/api/v3/images/generations", {
