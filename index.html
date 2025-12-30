@@ -174,7 +174,7 @@
       <div class="container">
         <h2 class="section-title">AI 客服 · RAG 智能问答</h2>
         <p class="section-subtitle">
-          直连豆包 Seed-1-6-flash 模型与固定 Prompt，实时生成高端定制咨询回复。
+          通过 Cloudflare Worker 转发到 Doubao Seed-1-6-flash，使用固定 Prompt 生成高端定制咨询回复。
         </p>
         <div class="ai-layout">
           <div class="chat-box">
@@ -189,6 +189,47 @@
             <h3>品牌工坊影像</h3>
             <p class="muted">AI 客服已接入私有知识库，内部配置不对外展示。</p>
             <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80" alt="湘绣工坊" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="settings">
+      <div class="container">
+        <h2 class="section-title">设置 · 网关与密钥</h2>
+        <p class="section-subtitle">
+          所有前端请求将通过 Cloudflare Worker 统一转发，填写 API Key 可直连 Doubao / Ark，未填写时使用后台兜底密钥（若已配置）。
+        </p>
+        <div class="settings-grid">
+          <div class="glass-card">
+            <div class="field">
+              <label>API Key</label>
+              <input type="password" id="apiKeyInput" placeholder="请输入您的 Doubao/Ark API Key" />
+            </div>
+            <div class="field">
+              <label>Provider</label>
+              <select id="providerSelect">
+                <option value="doubao">Doubao / Ark</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Base URL</label>
+              <input type="text" id="baseUrlInput" value="https://api.classmanagementportal.org" />
+              <small class="muted">统一转发地址，默认无需修改。</small>
+            </div>
+            <div class="cta-group">
+              <button class="btn" id="saveSettings">保存</button>
+              <button class="btn secondary" id="clearSettings">清除</button>
+            </div>
+          </div>
+          <div class="glass-card">
+            <h3>调用说明</h3>
+            <ul class="settings-hints">
+              <li>请求域名固定为 <code>api.classmanagementportal.org</code></li>
+              <li>已内置 CORS 处理，前端无需代理</li>
+              <li>清除 Key 后，若后端配置了兜底 Key 仍可继续使用</li>
+              <li>遇到错误时，Toast 会展示 HTTP 状态码与提示信息</li>
+            </ul>
           </div>
         </div>
       </div>

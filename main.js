@@ -1,13 +1,15 @@
-const DOUBAO_API_KEY = "0db191df-893c-43ec-9e6d-c6c2b08ccae2";
-const DOUBAO_BASE = "https://ark.cn-beijing.volces.com/api/v3";
-const CORS_PROXY = "https://cors.isomorphic-git.org/";
+const DEFAULT_BASE_URL = "https://api.classmanagementportal.org";
 const DOUBAO_CHAT_MODEL = "seed-1-6-flash";
 const DOUBAO_TRYON_MODEL = "doubao-seedream-4-5";
 const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=200&q=80";
 
-const withCorsProxy = (url) => `${CORS_PROXY}${url}`;
-
 const resolveModel = (key, fallback) => localStorage.getItem(key) || fallback;
+const resolveBaseUrl = () => localStorage.getItem("yunwanqian_base_url") || DEFAULT_BASE_URL;
+const getApiKey = () => localStorage.getItem("yunwanqian_api_key") || "";
+const setApiKey = (key) => localStorage.setItem("yunwanqian_api_key", key.trim());
+const clearApiKey = () => localStorage.removeItem("yunwanqian_api_key");
+const setBaseUrl = (url) => localStorage.setItem("yunwanqian_base_url", url.trim() || DEFAULT_BASE_URL);
+const compactMessage = (message) => (message || "").toString().slice(0, 180);
 
 const fixedPrompt = `你是“长沙韵万千”高端湘派刺绣旗袍的金牌客服。
 回答要求：
@@ -48,29 +50,50 @@ const callSeedModel = async (question) => {
     temperature: 0.4,
   };
 
+  const baseUrl = resolveBaseUrl().replace(/\/$/, "");
+  const url = `${baseUrl}/v1/chat/completions`;
+  const headers = { "Content-Type": "application/json" };
+  const apiKey = getApiKey();
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
   try {
-    const response = await fetch(withCorsProxy(`${DOUBAO_BASE}/chat/completions`), {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${DOUBAO_API_KEY}`,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
     const raw = await response.text();
-    if (!response.ok) {
-      throw new Error(`Seed 响应异常：${response.status} ${raw || ""}`.trim());
-    }
     let data = {};
     try {
       data = raw ? JSON.parse(raw) : {};
     } catch (parseErr) {
       console.warn("RAG 响应解析为文本回退", parseErr, raw);
     }
+
+    if (!response.ok) {
+      console.error("RAG 响应异常", {
+        status: response.status,
+        body: raw,
+        requestId: data?.request_id,
+      });
+      showToast(
+        "AI 对话失败",
+        `状态码：${response.status}；${compactMessage(data?.error?.message || raw || "未知错误")}`
+      );
+      return {
+        answer: "抱歉，AI 客服暂时未能连接成功，建议直接预约人工顾问。",
+        follow_up: "是否需要我为您安排线下量体或预约咨询？",
+      };
+    }
+
     const content = data.choices?.[0]?.message?.content || raw;
     if (!content) {
-      throw new Error("Seed API 响应为空");
+      showToast("AI 对话失败", "响应为空。（错误码：RAG-001）");
+      return {
+        answer: "抱歉，暂未收到 AI 的回复，请稍后再试。",
+        follow_up: "是否需要预约人工顾问？",
+      };
     }
     try {
       const parsed = typeof content === "string" ? JSON.parse(content) : content;
@@ -82,7 +105,10 @@ const callSeedModel = async (question) => {
     }
   } catch (error) {
     console.error("RAG 调用失败", error);
-    showToast("AI 对话失败", `豆包接口响应异常，请稍后重试。（错误码：RAG-001）`);
+    showToast(
+      "AI 对话失败",
+      `网络或服务异常，请稍后重试。状态：${error?.status || "未知"}；${compactMessage(error?.message || error)}`
+    );
     return {
       answer: "抱歉，AI 客服暂时未能连接成功，建议直接预约人工顾问。",
       follow_up: "是否需要我为您安排线下量体或预约咨询？",
@@ -347,12 +373,15 @@ const initTryOn = () => {
     showLoading("AI 试穿生成中...");
     try {
       const garmentData = await fetchImageAsDataUrl(selectedGarment);
-      const response = await fetch(withCorsProxy(`${DOUBAO_BASE}/images/generations`), {
+      const baseUrl = resolveBaseUrl().replace(/\/$/, "");
+      const url = `${baseUrl}/v1/images/generations`;
+      const headers = { "Content-Type": "application/json" };
+      const apiKey = getApiKey();
+      if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+      const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${DOUBAO_API_KEY}`,
-        },
+        headers,
         body: JSON.stringify({
           model: resolveModel("yunwanqian_tryon_model", DOUBAO_TRYON_MODEL),
           prompt: tryonPrompt,
@@ -360,14 +389,23 @@ const initTryOn = () => {
         }),
       });
       const raw = await response.text();
-      if (!response.ok) {
-        throw new Error(`Seedream 响应异常：${response.status} ${raw || ""}`.trim());
-      }
       let data = {};
       try {
         data = raw ? JSON.parse(raw) : {};
       } catch (parseErr) {
         console.warn("Seedream 响应解析为文本回退", parseErr, raw);
+      }
+      if (!response.ok) {
+        console.error("试穿失败", {
+          status: response.status,
+          body: raw,
+          requestId: data?.request_id,
+        });
+        showToast(
+          "试穿失败",
+          `状态码：${response.status}；${compactMessage(data?.error?.message || raw || "未知错误")}`
+        );
+        return;
       }
       const resultUrl = data.data?.[0]?.url;
       if (resultUrl) {
@@ -376,10 +414,13 @@ const initTryOn = () => {
         showToast("试穿完成", "已生成 AI 试穿效果。");
         return;
       }
-      throw new Error("Seedream 响应为空");
+      showToast("试穿失败", "响应为空。（错误码：TRYON-002）");
     } catch (error) {
       console.error("试穿失败", error);
-      showToast("试穿失败", "AI 接口暂不可用，请稍后重试。（错误码：TRYON-002）");
+      showToast(
+        "试穿失败",
+        `网络或服务异常，请稍后重试。状态：${error?.status || "未知"}；${compactMessage(error?.message || error)}`
+      );
     } finally {
       hideLoading();
     }
@@ -499,6 +540,42 @@ const initMemberSparkle = () => {
   });
 };
 
+const initSettings = () => {
+  const keyInput = document.getElementById("apiKeyInput");
+  const baseInput = document.getElementById("baseUrlInput");
+  const providerSelect = document.getElementById("providerSelect");
+  const saveBtn = document.getElementById("saveSettings");
+  const clearBtn = document.getElementById("clearSettings");
+  if (!keyInput || !baseInput || !saveBtn || !clearBtn) return;
+
+  keyInput.value = getApiKey();
+  baseInput.value = resolveBaseUrl();
+  if (providerSelect) {
+    providerSelect.value = localStorage.getItem("yunwanqian_provider") || "doubao";
+  }
+
+  saveBtn.addEventListener("click", () => {
+    setApiKey(keyInput.value);
+    setBaseUrl(baseInput.value || DEFAULT_BASE_URL);
+    if (providerSelect) {
+      localStorage.setItem("yunwanqian_provider", providerSelect.value);
+    }
+    showToast("设置已保存", `请求网关：${resolveBaseUrl()}`);
+  });
+
+  clearBtn.addEventListener("click", () => {
+    clearApiKey();
+    setBaseUrl(DEFAULT_BASE_URL);
+    if (providerSelect) {
+      localStorage.removeItem("yunwanqian_provider");
+      providerSelect.value = "doubao";
+    }
+    keyInput.value = "";
+    baseInput.value = DEFAULT_BASE_URL;
+    showToast("设置已清除", "已恢复默认网关与后端兜底密钥（若已配置）。");
+  });
+};
+
 
 const initToast = () => {
   const toast = document.getElementById("toast");
@@ -532,4 +609,5 @@ initTryOn();
 initMemberState();
 initMemberSparkle();
 initAvatarUpload();
+initSettings();
 appendMessage("assistant", "您好，我是韵万千 AI 客服，请问今天想了解哪类旗袍定制服务？", "AI");
